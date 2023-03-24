@@ -1,10 +1,10 @@
 """
-V 1.0.0.(1) #fjerna __del__ vet ikke om det ødela?
+V 1.0.1
 """
 
 from vidgear.gears import NetGear
 from vidgear.gears.helper import reducer
-import traceback
+import traceback, time
 import cv2
 options = {
     "request_timeout": 5,
@@ -19,6 +19,15 @@ class VideoStream():
     def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
+        #self.wait()
+    def wait(self):
+        client = None
+        while not client:
+            try:
+                client = self.server.recv(return_data=False)
+            except:
+                time.sleep(0.1)
+                continue
 
     def sendFrame(self, frame):
         self.frame = frame
@@ -36,6 +45,9 @@ class VideoStream():
             return self.recv_data
     
     def stop(self):
+        self.server.close()
+
+    def __del__(self):
         self.server.close()
 
 
@@ -56,6 +68,11 @@ class VideoClient():
 
     def stop(self):
         """Stopper clienten, sender "s" til serveren"""
+        self.sendData("s")
+        self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
+        self.client.close()
+
+    def __del__(self):
         self.sendData("s")
         self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
         self.client.close()

@@ -1,5 +1,5 @@
 """
-V 1.0.5
+V 1.0.8
 """
 
 import RPi.GPIO as GPIO
@@ -28,6 +28,7 @@ class LEDstatus():
         self.thread = threading.Thread(target=self.run, args=())
         self.thread.daemon = True
         self.thread.start()
+        
 
     def run(self):
         while self.runThread:
@@ -35,10 +36,11 @@ class LEDstatus():
                 self.wait_for_connection_blink()
             elif self.state == "connected":
                 self.connected_blink()
+            elif self.state == "dark":
+                self.dark_blink()
             elif self.state == "error":
                 self.error_blink()
             elif self.state == "shut_down":
-                self.shut_down_blink()
                 self.runThread = False
             time.sleep(0.1)
 
@@ -48,6 +50,11 @@ class LEDstatus():
     def connected_blink(self) -> None:
         self.BlueLed.ChangeDutyCycle(0)
         self.GreenLed.ChangeDutyCycle(100)
+
+    def dark_blink(self) -> None:
+        self.BlueLed.ChangeDutyCycle(0)
+        self.RedLed.ChangeDutyCycle(0)
+        self.GreenLed.ChangeDutyCycle(0)
 
     def error_blink(self):
         self.GreenLed.ChangeDutyCycle(0)
@@ -63,16 +70,6 @@ class LEDstatus():
             while time.time()-0.2 < t_now+1:
                 pass
 
-    def shut_down_blink(self) -> None:
-        self.RedLed.ChangeDutyCycle(100)
-        self.BlueLed.ChangeDutyCycle(0)
-        self.GreenLed.ChangeDutyCycle(0)
-        time.sleep(10)
-        self.RedLed.ChangeDutyCycle(0)
-        self.RedLed.stop()
-        self.GreenLed.stop()
-        self.BlueLed.stop()
-        GPIO.cleanup()
 
     def wait_for_connection(self) -> None:
         self.state = "wait_for_connection"
@@ -83,9 +80,18 @@ class LEDstatus():
     def error(self) -> None:
         self.state = "error"
 
+    def dark(self) -> None:
+        self.state = "dark"
+
     def shut_down(self) -> None:
+        self.RedLed.ChangeDutyCycle(100)
+        time.sleep(2)
+        self.BlueLed.ChangeDutyCycle(0)
+        self.GreenLed.ChangeDutyCycle(0)
+        self.RedLed.ChangeDutyCycle(0)
+        self.RedLed.stop()
+        self.GreenLed.stop()
+        self.BlueLed.stop()
+        GPIO.cleanup()
         self.state = "shut_down"
-        
-    
-    
 

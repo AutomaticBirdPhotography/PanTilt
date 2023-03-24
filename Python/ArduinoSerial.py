@@ -1,7 +1,9 @@
 """
-V 1.0.0
+V 1.0.1
 """
-#test endring
+
+
+
 import serial
 import threading
 import queue
@@ -34,5 +36,4 @@ class Arduino():
 
     def close(self) -> None:
         self.send("0,0,0,0")
-        self.send_thread.join()
         self.serial.close()
