@@ -11,6 +11,8 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
+client = v.VideoClient(clientAddress="192.168.10.100", port="1234")
+
 runProgram = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
 last_button = last_data = None #Må lager en verdi for dette så den ikke aktiverer og deaktiverer knappen mange ganger i sekundet
@@ -65,7 +67,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
 
 joy = j.Controller(1)
 
-client = v.VideoClient(clientAddress="192.168.10.184", port="1234")
+
 main = G.window("Frame", onMouse)
 enable_button = G.button("ON", "OFF", (50,380), 70, 40, (0, 255, 0), (0,0,255))
 home_button = G.button("Hjem", "Hjem", (150, 380), 70, 40, (255, 255, 255), (188,32,12))
