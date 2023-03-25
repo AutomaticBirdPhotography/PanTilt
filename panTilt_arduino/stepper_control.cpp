@@ -1,7 +1,3 @@
-/*
-  V 1.0.4
-*/
-
 #include <Arduino.h>
 #include <AccelStepper.h>
 #define motorInterfaceType 1

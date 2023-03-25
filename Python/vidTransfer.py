@@ -1,7 +1,3 @@
-"""
-V 1.0.1
-"""
-
 from vidgear.gears import NetGear
 from vidgear.gears.helper import reducer
 import traceback, time

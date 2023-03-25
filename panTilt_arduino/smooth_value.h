@@ -1,7 +1,3 @@
-/*
-V 1.0.0
-*/
-
 #ifndef SMOOTH_VALUE_H
 #define SMOOTH_VALUE_H
 

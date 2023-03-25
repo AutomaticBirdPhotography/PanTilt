@@ -1,7 +1,3 @@
-"""
-V 1.0.6
-"""
-
 import vidTransfer as v
 import GUIopenCv as G
 import ArduinoSerial as A

@@ -1,9 +1,3 @@
-"""
-V 1.0.1
-"""
-
-
-
 import serial
 import threading
 import queue

@@ -1,7 +1,3 @@
-"""
-V 1.0.8
-"""
-
 import RPi.GPIO as GPIO
 import time, threading
 

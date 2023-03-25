@@ -1,7 +1,3 @@
-/*
-V 1.0.1
-*/
-
 #ifndef SERVO_CONTROL_H
 #define SERVO_CONTROL_H
 

@@ -1,7 +1,3 @@
-/*
-V 1.0.0
-*/
-
 #include "smooth_value.h"
 
 Smoothing::Smoothing() {

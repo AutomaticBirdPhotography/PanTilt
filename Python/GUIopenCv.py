@@ -1,7 +1,3 @@
-"""
-V 1.0.9
-"""
-
 import cv2
 import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
