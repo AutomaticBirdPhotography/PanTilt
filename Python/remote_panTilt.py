@@ -3,7 +3,7 @@ V 1.0.4
 """
 
 #TODO: 
-# - forhindre at det kommer opp et tomt vindu til å begynne med
+# - fixed aspect ratio
 
 import vidTransfer as v
 import GUIopenCv as G
