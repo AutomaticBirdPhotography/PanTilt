@@ -13,6 +13,7 @@ void Smoothing::setup(float in_acceleration, int in_maxUp, int in_maxDown) {
 
 float Smoothing::speedUpdate(float targetVelocity, int stepperPosition) {
   stoppingDistance = calculateStopping(currentVelocity);
+  remainingSteps = stoppingDistance;
   if (stepperPosition + stoppingDistance >= maxUp) {
     if (targetVelocity > 0) targetVelocity = 0;
   }
@@ -40,6 +41,7 @@ float Smoothing::positionUpdate(int targetValue, int stepperPosition) {
   if (targetValue > maxUp) targetValue = maxUp;
   else if (targetValue < maxDown) targetValue = maxDown;
   stoppingDistance = calculateStopping(currentVelocity);
+  remainingSteps = stepperPosition-targetValue;
 
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {
@@ -85,3 +87,5 @@ float Smoothing::calculateStopping(float in_currentVelocity) {
   if (in_currentVelocity < 0) Distance = -Distance;
   return Distance;
 }
+
+int Smoothing::getRemainingSteps(){return abs(remainingSteps);}
