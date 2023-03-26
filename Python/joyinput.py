@@ -56,11 +56,22 @@ class Controller:
             print("Kontrolleren er ikke tilgjengelig")
             return None
 
-    def get_active_buttons(self):
+    def get_active_button(self):
         """
-        Returnerer en liste over navnene på knappene som er aktivert.
+        Returnerer navnet på knappen som er aktiv
         """
-        return [button_name for button_name, active in self.active_buttons.items() if active]
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.stop()
+        for i in range(4):
+            if (self.joystick.get_button(i) == 1):
+                return BUTTON_NAMES[i]
+        if (self.joystick.get_button(8) == 1):
+            return BUTTON_NAMES[4]
+        hat = self.joystick.get_hat(0)[1]
+        if hat == 1: return BUTTON_NAMES[5]
+        elif hat == -1: return BUTTON_NAMES[6]
+        return None
 
     def toggle_button(self, button_index):
         """
@@ -75,24 +86,6 @@ class Controller:
         """
         Legger til en dødsone
         """
-        if value <= -100:
-            return -100
-        elif value >= 100:
-            return 100
-        elif abs(value) <= 10:
-            return 0
-        elif value < 0:
-            return -((abs(value) - 10) / 90) * 100
-        else:
-            return ((abs(value) - 10) / 90) * 100
-
-    def stop(self):
-        pygame.quit()
-
-    def __del__(self):
-        pygame.quit()
-    
-    def deadzone(self, value):
         if value <= -100:
             return -100
         elif value >= 100:

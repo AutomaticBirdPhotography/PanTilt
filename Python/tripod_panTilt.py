@@ -22,7 +22,7 @@ try:
     while True:
             _,dslrFrame = dslr.read()
             webFrame =web.capture_array()
-            result = main.createMultiple(webFrame, dslrFrame)
+            result = main.create_multiple(webFrame, dslrFrame)
             stream.sendFrame(result)
             data = stream.getData()
             if data != previous_data and data != None:
