@@ -260,6 +260,9 @@ class button():
         else:
             return False
 
+    def toggle(self):
+        self.active = not self.active
+
     def activate(self):
         """Setter knappen til å være aktiv - endrer utseende"""
         self.active = True
