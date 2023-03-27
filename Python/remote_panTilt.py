@@ -1,9 +1,5 @@
-"""
-V 1.0.4
-"""
-
 #TODO: 
-# - fixed aspect ratio
+# - fixed aspect ratio på vinduet som kommer opp
 
 import vidTransfer as v
 import GUIopenCv as G
@@ -17,57 +13,43 @@ run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_bu
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
 last_button = last_data = None #Må lager en verdi for dette så den ikke aktiverer og deaktiverer knappen mange ganger i sekundet
 value_factors = [0.1, 0.5, 1]
-value_index = 2 #faktor for hvor mye verdien fra joy skal ganges med
-
+value_index = 1 #faktor for hvor mye verdien fra joy skal ganges med
 
 def buttonActions(x=None, y=None, button=None):
     global run_program, send_joyData, value_index
     
-    # Check if exit button is clicked or 'BACK' button is pressed
     if exit_button.is_clicked((x,y)) or button == "BACK":
-        joy_button.active = False
+        joy_button.deactivate()
         run_program = False
 
-    # Check if joy button is clicked or 'X' button is pressed
     elif joy_button.is_clicked((x, y)) or button == "X":
-        joy_button.active = not joy_button.active
+        joy_button.toggle()
         if not joy_button.active:
             client.sendData("0,0,0,0")
-        align_button.deactivate()
-        home_button.deactivate()
 
-    # Check if enable button is clicked or 'B' button is pressed
     elif enable_button.is_clicked((x, y)) or button == "B":
-        enable_button.active = not enable_button.active
+        enable_button.toggle()
         if enable_button.active:
             client.sendData("e")
         else:
             client.sendData("d")
-        align_button.deactivate()
-        home_button.deactivate()
 
-    # Check if home button is clicked or 'Y' button is pressed
     elif home_button.is_clicked((x,y)) or button == "Y":
-        home_button.active = not home_button.active
+        home_button.toggle()
         if home_button.active:
             client.sendData("h") 
-        align_button.deactivate()
         home_button.deactivate()
 
-    # Check if align button is clicked or 'A' button is pressed
     elif align_button.is_clicked((x,y)) or button == "A":
-        align_button.active = not align_button.active
+        align_button.toggle()
         if align_button.active:
             client.sendData("a")
         align_button.deactivate()
-        home_button.deactivate()
 
-    # Check if increase button is clicked or 'UP' button is pressed
     elif increase_button.is_clicked((x,y)) or button == "UP":
         if value_index < len(value_factors) - 1:
             value_index += 1
 
-    # Check if decrease button is clicked or 'DOWN' button is pressed
     elif decrease_button.is_clicked((x,y)) or button == "DOWN":
         if value_index >= 1:
             value_index -= 1
