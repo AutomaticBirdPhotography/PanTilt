@@ -15,15 +15,6 @@ class VideoStream():
     def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
-        #self.wait()
-    def wait(self):
-        client = None
-        while not client:
-            try:
-                client = self.server.recv(return_data=False)
-            except:
-                time.sleep(0.1)
-                continue
 
     def sendFrame(self, frame):
         self.frame = frame
