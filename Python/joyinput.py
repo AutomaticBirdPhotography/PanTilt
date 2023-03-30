@@ -25,23 +25,23 @@ class Controller:
         Sjekker om en kontroller er tilkoblet. Hvis en kontroller blir
         tilkoblet, lagrer den referansen til den i `self.joystick`.
         """
+        
+        pygame.event.pump()
+        pygame.joystick.init()
         if pygame.joystick.get_count() == 0:
             print("koble til joystick")
             self.joystick = None
 
         else:
-            joystick_count = pygame.joystick.get_count()
-
-            if joystick_count > 0:
-                try:
-                    self.joystick = pygame.joystick.Joystick(self.index)
-                    self.joystick.init()
-                    print(f"Kontroller [{+self.joystick.get_name()}] ble koblet til")
-                    self.is_connected = True
-                except pygame.error as e:
-                    if str(e) == 'Invalid joystick device number':
-                        self.is_connected = False
-                    else: raise e
+            try:
+                self.joystick = pygame.joystick.Joystick(self.index)
+                self.joystick.init()
+                print(f"Kontroller [{self.joystick.get_name()}] ble koblet til")
+                self.is_connected = True
+            except pygame.error as e:
+                if str(e) == 'Invalid joystick device number':
+                    self.is_connected = False
+                else: raise e
             
 
     def get_joystick_position(self, knob_number: int = 0, value_factor: float = 1) -> str:
@@ -51,11 +51,9 @@ class Controller:
         Verdien som returneres er i området -100 til 100, multiplisert med
         `value_factor`.
         """
+        self.event_checker()
         try:
             if self.is_connected:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.stop()
                 x = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-2)*100)*value_factor)
                 y = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-1)*100)*value_factor)
             else:
@@ -72,15 +70,13 @@ class Controller:
         """
         Returnerer navnet på knappen som er aktiv
         """
+        self.event_checker()
+
         if not self.is_connected:
             self.connect_controller() 
             return None
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.stop()
 
-        for i in self.joystick.get_numbuttons():
+        for i in range(self.joystick.get_numbuttons()):
             if (self.joystick.get_button(i) == 1) and i in BUTTON_NUMBER_NAMES:
                 return BUTTON_NUMBER_NAMES[i]
 
@@ -106,6 +102,15 @@ class Controller:
             return -((abs(value) - 10) / 90) * 100
         else:
             return ((abs(value) - 10) / 90) * 100
+        
+    def event_checker(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.stop()
+            elif event.type == pygame.JOYDEVICEREMOVED:
+                self.joystick.quit()
+                self.joystick = None
+                self.is_connected = False
 
     def stop(self):
         pygame.quit()
