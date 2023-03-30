@@ -14,37 +14,35 @@ class Controller:
         """
         Oppretter en kontroller med angitt indeksnummer `index` (default 0).
         """
+        pygame.init()
         self.index = index
-        self.is_disconnected = False
+        self.is_connected = False
         self.joystick = None
         # Initialiserer kontrolleren
-        self.check_controller()
+        self.connect_controller()
 
-    def check_controller(self):
+    def connect_controller(self):
         """
         Sjekker om en kontroller er tilkoblet. Hvis en kontroller blir
         tilkoblet, lagrer den referansen til den i `self.joystick`.
         """
-        pygame.joystick.init()
-        while True:
+        if pygame.joystick.get_count() == 0:
+            print("koble til joystick")
+            self.joystick = None
+
+        else:
             joystick_count = pygame.joystick.get_count()
 
             if joystick_count > 0:
-                self.joystick = pygame.joystick.Joystick(self.index)
-                self.joystick.init()
-                print(f"Kontroller [{+self.joystick.get_name()}] ble koblet til")
-                self.is_disconnected = False
-                break
-
-            if not joystick_count:
-                if not self.is_disconnected:
-                    print("Koble til kontroller!")
-                    self.is_disconnected = True
-                time.sleep(1)
-                self.check_controller
-
-            else:
-                self.is_disconnected = False
+                try:
+                    self.joystick = pygame.joystick.Joystick(self.index)
+                    self.joystick.init()
+                    print(f"Kontroller [{+self.joystick.get_name()}] ble koblet til")
+                    self.is_connected = True
+                except pygame.error as e:
+                    if str(e) == 'Invalid joystick device number':
+                        self.is_connected = False
+                    else: raise e
             
 
     def get_joystick_position(self, knob_number: int = 0, value_factor: float = 1) -> str:
@@ -55,11 +53,16 @@ class Controller:
         `value_factor`.
         """
         try:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.stop()
-            x = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-2)*100)*value_factor)
-            y = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-1)*100)*value_factor)
+            if self.is_connected:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.stop()
+                x = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-2)*100)*value_factor)
+                y = round(self.apply_deadzone(self.joystick.get_axis((knob_number+1)*2-1)*100)*value_factor)
+            else:
+                self.connect_controller()
+                x = 0
+                y = 0
             return f"{x:03d},{y:03d}"
         except AttributeError:
             # Hvis kontrolleren ikke er tilgjengelig, skriver den ut en melding
@@ -70,16 +73,20 @@ class Controller:
         """
         Returnerer navnet på knappen som er aktiv
         """
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.stop()
-        for i in self.joystick.get_numbuttons():
-            if (self.joystick.get_button(i) == 1):
-                return BUTTON_NUMBER_NAMES[i]
+        if self.is_connected:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.stop()
+            for i in self.joystick.get_numbuttons():
+                if (self.joystick.get_button(i) == 1):
+                    return BUTTON_NUMBER_NAMES[i]
 
-        hat = self.joystick.get_hat(0)[1]
-        if hat != 0: return HAT_NUMBER_NAMES[hat]
-        return None
+            hat = self.joystick.get_hat(0)[1]
+            if hat != 0: return HAT_NUMBER_NAMES[hat]
+            return None
+        else:
+            self.connect_controller() 
+            return None
 
     
     def apply_deadzone(self, value):
