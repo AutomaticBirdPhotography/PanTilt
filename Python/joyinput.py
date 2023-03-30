@@ -18,7 +18,6 @@ class Controller:
         self.index = index
         self.is_connected = False
         self.joystick = None
-        # Initialiserer kontrolleren
         self.connect_controller()
 
     def connect_controller(self):
@@ -73,20 +72,24 @@ class Controller:
         """
         Returnerer navnet på knappen som er aktiv
         """
-        if self.is_connected:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.stop()
-            for i in self.joystick.get_numbuttons():
-                if (self.joystick.get_button(i) == 1):
-                    return BUTTON_NUMBER_NAMES[i]
-
-            hat = self.joystick.get_hat(0)[1]
-            if hat != 0: return HAT_NUMBER_NAMES[hat]
-            return None
-        else:
+        if not self.is_connected:
             self.connect_controller() 
             return None
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.stop()
+
+        for i in self.joystick.get_numbuttons():
+            if (self.joystick.get_button(i) == 1) and i in BUTTON_NUMBER_NAMES:
+                return BUTTON_NUMBER_NAMES[i]
+
+        hat = self.joystick.get_hat(0)[1]
+        if hat != 0 and hat in HAT_NUMBER_NAMES:
+            return HAT_NUMBER_NAMES[hat]
+            
+        return None
+        
 
     
     def apply_deadzone(self, value):
