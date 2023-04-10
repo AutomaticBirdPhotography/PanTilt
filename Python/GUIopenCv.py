@@ -129,6 +129,13 @@ class window():
             self.roi_selected = True
             self.roi_drawing = False
             self.tracker = None
+            return(self.roi)
+        
+    def define_roi(self, roi):
+        self.roi = roi
+        self.roi_selected = True
+        self.roi_drawing = False
+        self.tracker = None
 
     def TRACK(self, frame):
         frame_height = frame.shape[0]
@@ -148,7 +155,8 @@ class window():
                 cv2.line(frame, track_center, (x,y), (255, 0, 0), 2, cv2.LINE_AA)
                 bbox = [int(i) for i in bbox]
                 cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3]), (0, 255, 255), 2)
-        return [track_center[0]-x,track_center[1]-y]
+                return [track_center[0]-x,track_center[1]-y]
+        else: return None
 
     def create_border(self, width: int = 50):
         """Setter at det skal være en kant på `width`px til høyre, venstre og under        """

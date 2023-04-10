@@ -22,15 +22,20 @@ try:
     while True:
             _,dslrFrame = dslr.read()
             webFrame =web.capture_array()
-            result = main.create_multiple(webFrame, dslrFrame)
-            stream.sendFrame(result)
             data = stream.getData()
+            if data[0] == 'r':
+                 #fjern r fra strengen
+                 main.define_roi(data)
+            if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
                 status.dark()
                 print(data)
                 arduino.send(data)
                 if data == "s":
                     break
+            result = main.create_multiple(webFrame, dslrFrame)
+            stream.sendFrame(result)
+
             previous_data = data
 except:
     status.error()
