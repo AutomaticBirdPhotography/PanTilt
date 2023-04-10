@@ -177,13 +177,13 @@ class window():
             if self.function_on_mouse is not None:
                 cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             self.initGUI = False
-        if (self.borderWidth > 0):
-            frame = cv2.copyMakeBorder(frame, 0,self.borderWidth,self.borderWidth,self.borderWidth, cv2.BORDER_CONSTANT, value=0)
-        self.frameHeight = frame.shape[0]
-        self.frameWidth = frame.shape[1]
-        self.dslrWidth = (self.frameHeight-self.borderWidth)/self.aspectRatio
+        if (self.border_width > 0):
+            frame = cv2.copyMakeBorder(frame, 0,self.border_width,self.border_width,self.border_width, cv2.BORDER_CONSTANT, value=0)
+        self.frame_height = frame.shape[0]
+        self.frame_width = frame.shape[1]
+        self.dslrWidth = (self.frame_height-self.border_width)/self.aspect_ratio
         
-        if (self.x > self.frameWidth-self.dslrWidth-self.borderWidth and self.x < self.frameWidth-self.borderWidth and self.y > 0 and self.y < self.frameHeight-self.borderWidth):
+        if (self.x > self.frame_width-self.dslrWidth-self.border_width and self.x < self.frame_width-self.border_width and self.y > 0 and self.y < self.frame_height-self.border_width):
             cv2.rectangle(frame, (self.x, self.y), (self.x, self.y), (0,0,255), 5)
             self.x = -1
             self.y = -1
@@ -204,18 +204,22 @@ class window():
         cv2.destroyAllWindows()
 
 class button():
-    def __init__(self, active_text, deactive_text, start_point, width, height, active_color, deactive_color):
+    def __init__(self, active_text, deactive_text, start_point, height, active_color, deactive_color):
         self.start_point = start_point
-        self.end_point = (start_point[0]+width, start_point[1]+height)
+        
         self.active_color = active_color
         self.active_text = active_text
         self.deactive_text = deactive_text
         self.deactive_color = deactive_color
 
         self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.fontScale = 1
-        self.fontThicknes = 2
-        
+        self.font_scale = 1
+        self.font_thicknes = 2
+        text_sizes = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
+              cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0]]
+        max_text_size = max(text_sizes, key=lambda x: x[0])
+        button_width = max_text_size[0] + 20
+        self.end_point = (start_point[0]+button_width, start_point[1]+height)
         self.active = False
         
 
@@ -229,20 +233,19 @@ class button():
         """
         self.frame = frame
         if self.active:
-            self.textsize = cv2.getTextSize(self.active_text, self.font, self.fontScale, self.fontThicknes)[0]# finn størrelsen på teksten
-            self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
-            self.textY = int((((self.end_point[1]-self.start_point[1]) + self.textsize[1]) / 2)+self.start_point[1])
-
-            self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, self.active_color, -1)
-            self.frame = cv2.putText(self.frame, self.active_text, (self.textX, self.textY), self.font, self.fontScale, (0,0,0), self.fontThicknes, cv2.LINE_AA)
+            current_text = self.active_text
+            current_color = self.active_color
         else:
-            self.textsize = cv2.getTextSize(self.deactive_text, self.font, self.fontScale, self.fontThicknes)[0]# finn størrelsen på teksten
-            self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
-            self.textY = int((((self.end_point[1]-self.start_point[1]) + self.textsize[1]) / 2)+self.start_point[1])
+            current_text = self.deactive_text
+            current_color = self.deactive_color
 
-            self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, self.deactive_color, -1)
-            self.frame = cv2.putText(self.frame, self.deactive_text, (self.textX, self.textY), self.font, self.fontScale, (0,0,0), self.fontThicknes, cv2.LINE_AA)
+        current_text_color = self.get_best_contrast_color(current_color)
 
+        self.textsize = cv2.getTextSize(current_text, self.font, self.font_scale, self.font_thicknes)[0]
+        self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
+        self.textY = int((((self.end_point[1]-self.start_point[1]) + self.textsize[1]) / 2)+self.start_point[1])
+        self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, current_color, -1)
+        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), self.font, self.font_scale, current_text_color, self.font_thicknes, cv2.LINE_AA)
 
     def is_clicked(self, mouse_pos):
         """Skjekker om `mouse_pos` er over arealet til knappen
@@ -278,4 +281,36 @@ class button():
     def deactivate(self):
         """Setter knappen til å være deaktivert - endrer utseende"""
         self.active = False
+
+    def get_best_contrast_color(self, bg_color):
+        """
+        Returnerer enten hvit eller svart, avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+
+        Parameters
+        ----------
+        bg_color : tuple
+            En tuple med tre verdier som representerer RGB-verdien til bakgrunnsfargen.
+
+        Returns
+        -------
+        tuple
+            En tuple med tre verdier som representerer RGB-verdien til den beste teksten basert på bakgrunnsfargen.
+        """
+        # Konverter bakgrunnsfargen til gråskala
+        bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
+
+        # Beregn luminansen til hvitt og svart
+        white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
+        black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
+
+        # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
+        white_contrast = abs(int(white_luminance) - int(bg_gray))
+        black_contrast = abs(int(black_luminance) - int(bg_gray))
+
+        # Returner fargen med høyest kontrast
+        if white_contrast > black_contrast:
+            return (255, 255, 255)
+        else:
+            return (0, 0, 0)
+
     
