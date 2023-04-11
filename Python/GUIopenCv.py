@@ -151,7 +151,7 @@ class window():
         return [track_center[0]-x,track_center[1]-y]
 
     def create_border(self, width: int = 50):
-        """Setter at det skal være en kant på `width`px til høyre, venstre og under        """
+        """Setter at det skal være en kant på `width`px til høyre, venstre og under"""
         self.border_width = width
 
     def show(self, frame, value_factor = None):
@@ -207,10 +207,10 @@ class button():
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 1
         self.font_thicknes = 2
-        text_sizes = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
+        text_sizes_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
               cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0]]
-        max_text_size = max(text_sizes, key=lambda x: x[0])
-        button_width = max_text_size[0] + 20
+        largest_text_size = max(text_sizes_list, key=lambda x: x[0])
+        button_width = largest_text_size[0] + 20
         self.end_point = (start_point[0]+button_width, start_point[1]+height)
         self.active = False
         
@@ -231,7 +231,7 @@ class button():
             current_text = self.deactive_text
             current_color = self.deactive_color
 
-        current_text_color = self.get_best_contrast_color(current_color)
+        current_text_color = self.get_contrast_color(current_color)
 
         self.textsize = cv2.getTextSize(current_text, self.font, self.font_scale, self.font_thicknes)[0]
         self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
@@ -257,7 +257,10 @@ class button():
         if (mouse_pos[0] == None or mouse_pos[1] == None):
             return False
 
-        elif ((mouse_pos[0] < self.end_point[0]) & (mouse_pos[0] > self.start_point[0]) & (mouse_pos[1] < self.end_point[1]) & (mouse_pos[1] > self.start_point[1])):
+        elif ((mouse_pos[0] < self.end_point[0]) 
+              & (mouse_pos[0] > self.start_point[0]) 
+              & (mouse_pos[1] < self.end_point[1]) 
+              & (mouse_pos[1] > self.start_point[1])):
             self.create(self.frame)
             return True
         else:
@@ -274,19 +277,22 @@ class button():
         """Setter knappen til å være deaktivert - endrer utseende"""
         self.active = False
 
-    def get_best_contrast_color(self, bg_color):
+    def get_contrast_color(self, bg_color):
         """
-        Returnerer enten hvit eller svart, avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+        Returnerer enten hvit eller svart, 
+        avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
 
         Parameters
         ----------
         bg_color : tuple
-            En tuple med tre verdier som representerer RGB-verdien til bakgrunnsfargen.
+            En tuple med tre verdier som representerer RGB-verdien
+            til bakgrunnsfargen.
 
         Returns
         -------
         tuple
-            En tuple med tre verdier som representerer RGB-verdien til den beste teksten basert på bakgrunnsfargen.
+            En tuple med tre verdier som representerer RGB-verdien
+            til den beste teksten basert på bakgrunnsfargen.
         """
         # Konverter bakgrunnsfargen til gråskala
         bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
@@ -304,5 +310,3 @@ class button():
             return (255, 255, 255)
         else:
             return (0, 0, 0)
-
-    
