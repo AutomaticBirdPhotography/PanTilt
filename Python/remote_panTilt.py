@@ -1,4 +1,5 @@
 #TODO: 
+# - vindu skal komme opp med en gang med info om lasting av program
 # - fixed aspect ratio på vinduet som kommer opp
 
 import vidTransfer as v
@@ -7,7 +8,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.10.100", port="1234")
+client = v.VideoClient()
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -67,14 +68,15 @@ joy = j.Controller(1)
 
 
 main = G.window("Frame", onMouse)
-enable_button = G.button("ON", "OFF", (50,380), 70, 40, (0, 255, 0), (0,0,255))
-home_button = G.button("Hjem", "Hjem", (150, 380), 70, 40, (255, 255, 255), (188,32,12))
-align_button = G.button("+", "+", (250, 380), 70, 40, (255, 255, 255), (0,255,12))
-joy_button = G.button("Stopp joy", "Joy", (350, 380), 200, 40, (255, 255, 255), (188,32,12))
+
+enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(50,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
+home_button = G.button("Hjem", "Hjem", (150, 380), 40, (255, 255, 255), (188,32,12))
+align_button = G.button("+", "+", (250, 380), 40, (255, 255, 255), (0,255,12))
+joy_button = G.button("Stopp joy", "Joy", (350, 380), 40, (255, 255, 255), (188,32,12))
 joy_button.activate()
-increase_button = G.button("+","+", (650,380), 30,30, (100,100,100), (255,255,255))
-decrease_button = G.button("-","-", (700,380), 30,30, (100,100,100), (255,255,255))
-exit_button = G.button("X", "X", (750, 380), 70, 40, (255,255,255), (0,0,255))
+increase_button = G.button("+","+", (650,380), 30, (100,100,100), (255,255,255))
+decrease_button = G.button("-","-", (700,380), 30, (100,100,100), (255,255,255))
+exit_button = G.button("X", "X", (750, 380), 40, (255,255,255), (0,0,255))
 main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
 main.create_border()
 try:
@@ -95,5 +97,9 @@ try:
 except:
     traceback.print_exc()
 finally:
-    client.stop()   #Tar seg av å sende "s"
-    main.destroy()
+    try:
+        client.stop()   #Tar seg av å sende "s"
+        main.destroy()
+    except:
+        traceback.print_exc()
+        raise Exception("Alvorlige programfeil oppstod")
