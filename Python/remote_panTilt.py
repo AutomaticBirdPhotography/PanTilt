@@ -58,6 +58,8 @@ def buttonActions(x=None, y=None, button=None):
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
+        main.mouse_x = mouse_x
+        main.mouse_y = mouse_y
         buttonActions(x=mouse_x, y=mouse_y)
         distanceToPoint = main.create_point(mouse_x, mouse_y)
         if distanceToPoint is not None:
@@ -68,6 +70,7 @@ joy = j.Controller(1)
 
 
 main = G.window("Frame", onMouse)
+#main.log("laster")
 
 enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(50,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
 home_button = G.button("Hjem", "Hjem", (150, 380), 40, (255, 255, 255), (188,32,12))

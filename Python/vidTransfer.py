@@ -3,6 +3,7 @@ from vidgear.gears.helper import reducer
 import traceback, time
 import cv2
 import ip_config
+import socket
 ip_configurator = ip_config.IPConfigurator()
 def configure_ip():
     ip_configurator.selectIP(invalid_ip=ip_configurator.clientAddress)
@@ -45,20 +46,27 @@ class VideoStream():
 
 
 class VideoClient():
-    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454") -> None:
+    def __init__(self, logging : bool = True, clientAddress : str = "auto", port : str = "5454") -> None:
+        """
+        Finner automatisk client-adressen, hvis ikke kommer tkintervindu opp hvor man kan legge inn
+        """
+        
         self.client = None
-        self.clientAddress = clientAddress
-        ip_configurator.clientAddress = clientAddress
+        if clientAddress == "auto":
+            self.clientAddress = socket.gethostbyname(socket.gethostname())
+        else:
+            self.clientAddress = clientAddress
+        ip_configurator.clientAddress = self.clientAddress
         while True:
             try:
-                self.client = NetGear(receive_mode=True, logging=logging, address=clientAddress, port=port, **options)
+                self.client = NetGear(receive_mode=True, logging=logging, address=self.clientAddress, port=port, **options)
                 self.target_data = None
                 break
             except:
                 configure_ip()
                 self.clientAddress = ip_configurator.clientAddress
-                if ip_configurator.closed: break
-        raise Exception("Etableringsforsøk ble avsluttet")
+                if ip_configurator.closed:
+                    raise Exception("Etableringsforsøk ble avsluttet")
 
     def sendData(self, data):
         self.target_data = data

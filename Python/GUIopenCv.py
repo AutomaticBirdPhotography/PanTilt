@@ -1,6 +1,12 @@
 import cv2
 import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+import ctypes
+
+# Få skjermens bredde og høyde
+skjerm_info = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
+skjerm_bredde = skjerm_info[0]
+skjerm_hoyde = skjerm_info[1]
 class window():
     """
     A class for creating OpenCV windows and handling mouse events.
@@ -23,6 +29,8 @@ class window():
         self.function_on_mouse = function_on_mouse
         self.x = -1
         self.y = -1
+        self.mouse_x = None
+        self.mouse_y = None
 
         self.roi = []
         self.start_point = []
@@ -33,9 +41,11 @@ class window():
 
         self.objects = []
         self.border_width = 0 #endres til antall pixler hvis man setter "createBorder()"
-        self.initGUI = False
         if win_name is not None:
-            self.initGUI = True
+            cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            if self.function_on_mouse is not None:
+                cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             
 
     def add_objects(self, objects: list):
@@ -162,6 +172,41 @@ class window():
         """Setter at det skal være en kant på `width`px til høyre, venstre og under"""
         self.border_width = width
 
+    def log(self, data: str):
+        """
+        Logger data til skjermen
+        """
+        #TODO her trengs en avbrytknapp
+        bakgrunn = np.zeros((skjerm_hoyde, skjerm_bredde, 3), dtype=np.uint8)
+
+        midtpunkt_x = int(skjerm_bredde / 2)
+        midtpunkt_y = int(skjerm_hoyde / 2)
+
+
+        tekst = data
+        tekst_tykkelse = 2
+        tekst_type = cv2.FONT_HERSHEY_SIMPLEX
+        tekst_scale = 1
+
+        tekst_storrelse, _ = cv2.getTextSize(tekst, tekst_type, tekst_scale, tekst_tykkelse)
+        tekst_bredde = tekst_storrelse[0]
+        tekst_hoyde = tekst_storrelse[1]
+        tekst_pos_x = midtpunkt_x - int(tekst_bredde / 2)
+        tekst_pos_y = midtpunkt_y + int(tekst_hoyde / 2)
+        cv2.putText(bakgrunn, tekst, (tekst_pos_x, tekst_pos_y), tekst_type, tekst_scale, (255,255,255), tekst_tykkelse, cv2.LINE_AA)
+
+        avbryt_bredde = 100
+        avbryt_hoyde = 70
+        avbryt = button("Avbryt", "Avbryt", (midtpunkt_x - int(avbryt_bredde/2), midtpunkt_y + int(avbryt_hoyde/2) + 50), avbryt_bredde, (0,0,255), (0,0,255))
+        avbryt.create(bakgrunn)
+
+        cv2.imshow(self.win_name, bakgrunn)
+        key = cv2.waitKey(10) & 0xFF
+        if key == ord("q") or avbryt.is_clicked((self.mouse_x, self.mouse_y)):
+            avbryt.toggle()
+            raise Exception("show ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
+
+
     def show(self, frame, value_factor = None):
         """Viser `frame` i et OpenCV-vindu. Oppdaterer objektene (knappene, border)\n
         Avsluttes med "q"
@@ -171,12 +216,6 @@ class window():
         frame : array
             Bildet som skal vises
         """
-        if self.initGUI:
-            cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
-            #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            if self.function_on_mouse is not None:
-                cv2.setMouseCallback(self.win_name, self.function_on_mouse)
-            self.initGUI = False
         if (self.border_width > 0):
             frame = cv2.copyMakeBorder(frame, 0,self.border_width,self.border_width,self.border_width, cv2.BORDER_CONSTANT, value=0)
         self.frame_height = frame.shape[0]
