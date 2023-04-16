@@ -3,8 +3,6 @@ import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 import ctypes
 
-# Få skjermens bredde og høyde
-
 class window():
     """
     A class for creating OpenCV windows and handling mouse events.
@@ -44,7 +42,7 @@ class window():
             self.skjerm_bredde = skjerm_info[0]
             self.skjerm_hoyde = skjerm_info[1]
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
                 cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             
@@ -221,9 +219,9 @@ class window():
             frame = cv2.copyMakeBorder(frame, 0,self.border_width,self.border_width,self.border_width, cv2.BORDER_CONSTANT, value=0)
         self.frame_height = frame.shape[0]
         self.frame_width = frame.shape[1]
-        self.dslrWidth = (self.frame_height-self.border_width)/self.aspect_ratio
+        self.dslr_width = (self.frame_height-self.border_width)/self.aspect_ratio
         
-        if (self.x > self.frame_width-self.dslrWidth-self.border_width and self.x < self.frame_width-self.border_width and self.y > 0 and self.y < self.frame_height-self.border_width):
+        if (self.x > self.frame_width-self.dslr_width-self.border_width and self.x < self.frame_width-self.border_width and self.y > 0 and self.y < self.frame_height-self.border_width):
             cv2.rectangle(frame, (self.x, self.y), (self.x, self.y), (0,0,255), 5)
             self.x = -1
             self.y = -1
