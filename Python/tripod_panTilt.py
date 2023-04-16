@@ -23,9 +23,10 @@ try:
             _,dslrFrame = dslr.read()
             webFrame =web.capture_array()
             data = stream.getData()
-            if data[0] == 'r':
-                 #fjern r fra strengen
-                 main.define_roi(data)
+            if data != None:
+                if data[0] == 'r':
+                    #fjern r fra strengen
+                    main.define_roi(data)
             if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
                 status.dark()
