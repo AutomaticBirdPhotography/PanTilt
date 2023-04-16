@@ -41,10 +41,11 @@ class VideoStream():
             return self.recv_data
     
     def stop(self):
-        self.server.close()
+        if self.server is not None:
+            self.server.close()
 
     def __del__(self):
-        self.server.close()
+        self.stop()
 
 
 class VideoClient():
@@ -92,7 +93,4 @@ class VideoClient():
             self.client.close()
 
     def __del__(self):
-        if self.client != None:
-            self.sendData("s")
-            self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
-            self.client.close()
+        self.stop()
