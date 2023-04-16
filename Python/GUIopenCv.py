@@ -4,9 +4,7 @@ kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 import ctypes
 
 # Få skjermens bredde og høyde
-skjerm_info = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
-skjerm_bredde = skjerm_info[0]
-skjerm_hoyde = skjerm_info[1]
+
 class window():
     """
     A class for creating OpenCV windows and handling mouse events.
@@ -42,6 +40,9 @@ class window():
         self.objects = []
         self.border_width = 0 #endres til antall pixler hvis man setter "createBorder()"
         if win_name is not None:
+            skjerm_info = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
+            self.skjerm_bredde = skjerm_info[0]
+            self.skjerm_hoyde = skjerm_info[1]
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
             cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
@@ -177,10 +178,10 @@ class window():
         Logger data til skjermen
         """
         #TODO her trengs en avbrytknapp
-        bakgrunn = np.zeros((skjerm_hoyde, skjerm_bredde, 3), dtype=np.uint8)
+        bakgrunn = np.zeros((self.skjerm_hoyde, self.skjerm_bredde, 3), dtype=np.uint8)
 
-        midtpunkt_x = int(skjerm_bredde / 2)
-        midtpunkt_y = int(skjerm_hoyde / 2)
+        midtpunkt_x = int(self.skjerm_bredde / 2)
+        midtpunkt_y = int(self.skjerm_hoyde / 2)
 
 
         tekst = data
