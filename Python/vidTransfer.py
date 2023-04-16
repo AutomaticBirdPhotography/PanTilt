@@ -2,6 +2,7 @@ from vidgear.gears import NetGear
 from vidgear.gears.helper import reducer
 import traceback, time
 import cv2
+import numpy as np
 import ip_config
 import socket
 ip_configurator = ip_config.IPConfigurator()
@@ -50,6 +51,11 @@ class VideoClient():
     def __init__(self, logging : bool = True, clientAddress : str = "auto", port : str = "5454") -> None:
         """
         Finner automatisk client-adressen, hvis ikke kommer tkintervindu opp hvor man kan legge inn
+
+        Parameters
+        ---------
+            `clientAddress` 
+                "auto" eller adresse, typ.: "192.168.10.184"
         """
         self.client = None
         if clientAddress == "auto":
@@ -73,9 +79,9 @@ class VideoClient():
     
     def grabFrame(self):
         self.data = self.client.recv(return_data=self.target_data)
-        if self.data != None:
+        if self.data is not None:
             self.server_data, self.frame = self.data
-            if self.frame != None:
+            if np.any(self.frame):
                 return self.frame
 
     def stop(self):

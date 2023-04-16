@@ -16,7 +16,8 @@ class Arduino():
     def _send_loop(self):
         while True:
             data = self.send_queue.get()
-            self.serial.write(data.encode())
+            if self.serial.is_open():
+                self.serial.write(data.encode())
             self.send_queue.task_done() #markerer at en oppgave i køen er fullført, noe som er viktig for å unngå at tråden blir blokkert ved full kø.
 
     def send(self, data: str) -> None:
