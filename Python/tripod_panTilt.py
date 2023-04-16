@@ -6,7 +6,7 @@ from picamera2 import Picamera2
 import cv2
 import traceback
 
-stream = v.VideoStream(clientAddress="192.168.10.100", port="1234")
+stream = v.VideoStream(clientAddress="192.168.10.100")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
