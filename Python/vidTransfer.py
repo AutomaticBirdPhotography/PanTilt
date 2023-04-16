@@ -20,6 +20,7 @@ options = {
 }
 class VideoStream():
     def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
+        self.recv_data = None
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
 
@@ -50,7 +51,6 @@ class VideoClient():
         """
         Finner automatisk client-adressen, hvis ikke kommer tkintervindu opp hvor man kan legge inn
         """
-        
         self.client = None
         if clientAddress == "auto":
             self.clientAddress = socket.gethostbyname(socket.gethostname())
@@ -73,20 +73,20 @@ class VideoClient():
     
     def grabFrame(self):
         self.data = self.client.recv(return_data=self.target_data)
-        if self.data is not None:
+        if self.data != None:
             self.server_data, self.frame = self.data
-            if self.frame is not None:
+            if self.frame != None:
                 return self.frame
 
     def stop(self):
         """Stopper clienten, sender "s" til serveren"""
-        if self.client is not None:
+        if self.client != None:
             self.sendData("s")
             self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
             self.client.close()
 
     def __del__(self):
-        if self.client is not None:
+        if self.client != None:
             self.sendData("s")
             self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
             self.client.close()
