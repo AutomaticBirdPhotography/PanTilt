@@ -46,6 +46,9 @@ class window():
             if self.function_on_mouse is not None:
                 cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             
+            bakgrunn = np.zeros((self.skjerm_hoyde, self.skjerm_bredde, 3), dtype=np.uint8)
+            self.show(bakgrunn)
+            
 
     def add_objects(self, objects: list):
         """

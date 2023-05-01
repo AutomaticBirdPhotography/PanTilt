@@ -6,11 +6,11 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
         main.mouse_x = mouse_x
         main.mouse_y = mouse_y
 
-main = g.window("hei", onMouse)
+#main = g.window("hei", onMouse)
+cv2.namedWindow("Hei")
 
 
 
 i = 0
 while True:
     i += 2
-    main.log(str(i))

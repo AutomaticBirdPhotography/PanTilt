@@ -1,6 +1,6 @@
 from vidgear.gears import NetGear
 from vidgear.gears.helper import reducer
-import traceback, time
+import traceback, time, threading
 import cv2
 import numpy as np
 import ip_config
@@ -74,19 +74,35 @@ class VideoClient():
                 self.clientAddress = ip_configurator.clientAddress
                 if ip_configurator.closed:
                     raise Exception("Etableringsforsøk ble avsluttet")
+        
+        self.stopped = False
+        self.emptyImg = np.zeros((580, 840, 3), dtype=np.uint8)
+        self.frame = self.emptyImg
+        self.thread = threading.Thread(target=self._grabFrameLoop)
+        self.thread.daemon = True
+        self.thread.start()
 
     def sendData(self, data):
         self.target_data = data
     
-    def grabFrame(self):
-        self.data = self.client.recv(return_data=self.target_data)
-        if self.data is not None:
-            self.server_data, self.frame = self.data
-            if np.any(self.frame):
-                return self.frame
+    def _grabFrameLoop(self):
+        while not self.stopped:
+            self.data = self.client.recv(return_data=self.target_data)
+            if self.data is not None:
+                self.server_data, in_frame = self.data
+            
+            else:
+                in_frame = self.emptyImg
 
+            if np.any(in_frame):
+                self.frame = in_frame
+
+    def grabFrame(self):
+        return self.frame
+    
     def stop(self):
         """Stopper clienten, sender "s" til serveren"""
+        self.stopped = True
         if self.client != None:
             self.sendData("s")
             self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
