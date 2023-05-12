@@ -59,6 +59,7 @@ class VideoClient():
                 "auto" eller adresse, typ.: "192.168.10.184"
         """
         self.client = None
+        self.server_data = None
         if clientAddress == "auto":
             self.clientAddress = socket.gethostbyname(socket.gethostname())
         else:
@@ -103,7 +104,7 @@ class VideoClient():
     def stop(self):
         """Stopper clienten, sender "s" til serveren"""
         self.stopped = True
-        if self.client != None:
+        if self.client is not None:
             self.sendData("s")
             self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
             self.client.close()
