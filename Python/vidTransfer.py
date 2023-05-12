@@ -57,8 +57,8 @@ class VideoClient():
             except:
                 configure_ip()
                 self.clientAddress = ip_configurator.clientAddress
-                if ip_configurator.closed: break
-        raise Exception("Etableringsforsøk ble avsluttet")
+                if ip_configurator.closed:
+                    raise Exception("Etableringsforsøk ble avsluttet")
 
     def sendData(self, data):
         self.target_data = data
