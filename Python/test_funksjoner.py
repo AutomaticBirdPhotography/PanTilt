@@ -1,11 +1,16 @@
-import ip_config
-def configure_ip():
-    configurator = ip_config.IPConfigurator()
-    while configurator.clientAddress != valid_ip:
-        configurator.selectIP(invalid_ip=configurator.clientAddress)
-        if configurator.closed: break
-    print(configurator.clientAddress)
+import GUIopenCv as g
+import cv2
 
-# Printer den valgte IP-adressen
-valid_ip = "192.168.10.234"
-configure_ip()
+def onMouse(event, mouse_x, mouse_y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        main.mouse_x = mouse_x
+        main.mouse_y = mouse_y
+
+#main = g.window("hei", onMouse)
+cv2.namedWindow("Hei")
+
+
+
+i = 0
+while True:
+    i += 2

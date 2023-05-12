@@ -1,8 +1,10 @@
 from vidgear.gears import NetGear
 from vidgear.gears.helper import reducer
-import traceback, time
+import traceback, time, threading
 import cv2
+import numpy as np
 import ip_config
+import socket
 ip_configurator = ip_config.IPConfigurator()
 def configure_ip():
     ip_configurator.selectIP(invalid_ip=ip_configurator.clientAddress)
@@ -19,6 +21,7 @@ options = {
 }
 class VideoStream():
     def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
+        self.recv_data = None
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
 
@@ -38,20 +41,32 @@ class VideoStream():
             return self.recv_data
     
     def stop(self):
-        self.server.close()
+        if self.server is not None:
+            self.server.close()
 
     def __del__(self):
-        self.server.close()
+        self.stop()
 
 
 class VideoClient():
-    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454") -> None:
+    def __init__(self, logging : bool = True, clientAddress : str = "auto", port : str = "5454") -> None:
+        """
+        Finner automatisk client-adressen, hvis ikke kommer tkintervindu opp hvor man kan legge inn
+
+        Parameters
+        ---------
+            `clientAddress` 
+                "auto" eller adresse, typ.: "192.168.10.184"
+        """
         self.client = None
-        self.clientAddress = clientAddress
-        ip_configurator.clientAddress = clientAddress
+        if clientAddress == "auto":
+            self.clientAddress = socket.gethostbyname(socket.gethostname())
+        else:
+            self.clientAddress = clientAddress
+        ip_configurator.clientAddress = self.clientAddress
         while True:
             try:
-                self.client = NetGear(receive_mode=True, logging=logging, address=clientAddress, port=port, **options)
+                self.client = NetGear(receive_mode=True, logging=logging, address=self.clientAddress, port=port, **options)
                 self.target_data = None
                 break
             except:
@@ -59,26 +74,39 @@ class VideoClient():
                 self.clientAddress = ip_configurator.clientAddress
                 if ip_configurator.closed:
                     raise Exception("Etableringsforsøk ble avsluttet")
+        
+        self.stopped = False
+        self.emptyImg = np.zeros((580, 840, 3), dtype=np.uint8)
+        self.frame = self.emptyImg
+        self.thread = threading.Thread(target=self._grabFrameLoop)
+        self.thread.daemon = True
+        self.thread.start()
 
     def sendData(self, data):
         self.target_data = data
     
-    def grabFrame(self):
-        self.data = self.client.recv(return_data=self.target_data)
-        if self.data is not None:
-            self.server_data, self.frame = self.data
-            if self.frame is not None:
-                return self.frame
+    def _grabFrameLoop(self):
+        while not self.stopped:
+            self.data = self.client.recv(return_data=self.target_data)
+            if self.data is not None:
+                self.server_data, in_frame = self.data
+            
+            else:
+                in_frame = self.emptyImg
 
+            if np.any(in_frame):
+                self.frame = in_frame
+
+    def grabFrame(self):
+        return self.frame
+    
     def stop(self):
         """Stopper clienten, sender "s" til serveren"""
-        if self.client is not None:
+        self.stopped = True
+        if self.client != None:
             self.sendData("s")
             self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
             self.client.close()
 
     def __del__(self):
-        if self.client is not None:
-            self.sendData("s")
-            self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
-            self.client.close()
+        self.stop()

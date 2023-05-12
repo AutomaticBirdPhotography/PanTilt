@@ -6,7 +6,7 @@ from picamera2 import Picamera2
 import cv2
 import traceback
 
-stream = v.VideoStream(clientAddress="192.168.10.100", port="1234")
+stream = v.VideoStream(clientAddress="192.168.10.184")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
@@ -23,10 +23,10 @@ try:
             _,dslrFrame = dslr.read()
             webFrame =web.capture_array()
             data = stream.getData()
-            if data[0] == 'r':
-                 #fjern r fra strengen
-                 data = data[1:]
-                 main.define_roi(data)
+            if data != None:
+                if data[0] == 'r':
+                    #fjern r fra strengen
+                    main.define_roi(data)
             if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
                 status.dark()
