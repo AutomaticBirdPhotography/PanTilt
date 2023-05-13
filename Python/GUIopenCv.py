@@ -244,6 +244,7 @@ class window():
         """Fjerner OpenCV-vinduene"""
         cv2.destroyAllWindows()
 
+
 class button():
     def __init__(self, active_text, deactive_text, start_point, height, active_color, deactive_color):
         self.start_point = start_point
@@ -359,3 +360,30 @@ class button():
             return (255, 255, 255)
         else:
             return (0, 0, 0)
+        
+
+def error_window(width: int, height: int) -> np.ndarray:
+    """
+    Oppretter et bilde av en ikke-kontakt skjermeffekt.
+
+    Parameters:
+        width (int): Bredden på bildet.
+        height (int): Høyden på bildet.
+
+    Returns:
+        numpy.ndarray: Et numpy-array som representerer bildet av den ikke-kontakt skjermen.
+    """
+    image = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Definer størrelsen på hver celle i rutenettet
+    cell_size = 40
+
+    for y in range(0, height, cell_size):
+        for x in range(0, width, cell_size):
+            # Bestem fargen for hver celle basert på dens posisjon
+            color = (255, 255, 255) if (x // cell_size + y // cell_size) % 2 == 0 else (0, 0, 0)
+
+            # Fyll cellen med fargen
+            image[y:y+cell_size, x:x+cell_size] = color
+
+    return image

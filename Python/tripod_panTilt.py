@@ -31,7 +31,8 @@ try:
                 webFrame = web.capture_array()
             except Exception as e:
                 print(f"Error capturing image from Picamera2: {str(e)}")
-                webFrame = np.zeros((240, 320, 3), dtype=np.uint8)
+                #webFrame = np.zeros((240, 320, 3), dtype=np.uint8)
+                webFrame = G.error_window(240, 320)
                 cv2.putText(webFrame, "Picamera connection failed", (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
             data = stream.getData()
