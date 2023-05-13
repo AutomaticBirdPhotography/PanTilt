@@ -281,7 +281,7 @@ class button():
             current_text = self.deactive_text
             current_color = self.deactive_color
 
-        current_text_color = self.get_contrast_color(current_color)
+        current_text_color = get_contrast_color(current_color)
 
         self.textsize = cv2.getTextSize(current_text, self.font, self.font_scale, self.font_thicknes)[0]
         self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
@@ -327,39 +327,39 @@ class button():
         """Setter knappen til å være deaktivert - endrer utseende"""
         self.active = False
 
-    def get_contrast_color(self, bg_color):
-        """
-        Returnerer enten hvit eller svart, 
-        avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+def get_contrast_color(bg_color):
+    """
+    Returnerer enten hvit eller svart, 
+    avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
 
-        Parameters
-        ----------
-        bg_color : tuple
-            En tuple med tre verdier som representerer RGB-verdien
-            til bakgrunnsfargen.
+    Parameters
+    ----------
+    bg_color : tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til bakgrunnsfargen.
 
-        Returns
-        -------
-        tuple
-            En tuple med tre verdier som representerer RGB-verdien
-            til den beste teksten basert på bakgrunnsfargen.
-        """
-        # Konverter bakgrunnsfargen til gråskala
-        bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
+    Returns
+    -------
+    tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til den beste teksten basert på bakgrunnsfargen.
+    """
+    # Konverter bakgrunnsfargen til gråskala
+    bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
 
-        # Beregn luminansen til hvitt og svart
-        white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
-        black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
+    # Beregn luminansen til hvitt og svart
+    white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
+    black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
 
-        # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
-        white_contrast = abs(int(white_luminance) - int(bg_gray))
-        black_contrast = abs(int(black_luminance) - int(bg_gray))
+    # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
+    white_contrast = abs(int(white_luminance) - int(bg_gray))
+    black_contrast = abs(int(black_luminance) - int(bg_gray))
 
-        # Returner fargen med høyest kontrast
-        if white_contrast > black_contrast:
-            return (255, 255, 255)
-        else:
-            return (0, 0, 0)
+    # Returner fargen med høyest kontrast
+    if white_contrast > black_contrast:
+        return (255, 255, 255)
+    else:
+        return (0, 0, 0)
         
 
 def error_window(width: int, height: int, text: str = None) -> np.ndarray:
@@ -395,6 +395,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image[:, sector_start:sector_end] = color
 
     if text is not None:
-        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+        contrast_color = get_contrast_color(image)
+        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, contrast_color, 2, cv2.LINE_AA)
 
     return image
