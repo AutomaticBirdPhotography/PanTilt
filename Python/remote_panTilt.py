@@ -81,7 +81,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
 
 joy = j.Controller(1)
 
-
+#TODO vinduet er ikke responsivt i starten
 main = G.window("Frame", onMouse)
 
 enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
