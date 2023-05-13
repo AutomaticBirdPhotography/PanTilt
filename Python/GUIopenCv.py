@@ -382,7 +382,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
     sector_width = width // num_sectors
 
     # Definer fargene for hver sektor
-    colors = [(0, 255, 255), (0, 255, 0), (255, 0, 255), (255, 0, 255), (255, 255, 0)]
+    colors = [(255, 255, 255), (0, 255, 255), (0, 255, 0), (255, 0, 255), (255, 255, 0)]
 
     # Gå gjennom hver sektor
     for i in range(num_sectors):
