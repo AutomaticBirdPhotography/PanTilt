@@ -48,12 +48,12 @@ def buttonActions(x=None, y=None, button=None):
             client.sendData("a")
         align_button.deactivate()
     
-    elif roi_button.is_clicked((x,y)):
-        roi_button.toggle()
-        if roi_button.active:
-            init_tracking = True
-        else:
-            init_tracking = False
+    #elif roi_button.is_clicked((x,y)):
+        #roi_button.toggle()
+        #if roi_button.active:
+            #init_tracking = True
+        #else:
+            #init_tracking = False
 
     elif increase_button.is_clicked((x,y)) or button == "UP":
         if value_index < len(value_factors) - 1:
@@ -65,10 +65,10 @@ def buttonActions(x=None, y=None, button=None):
     
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
-    if init_tracking:
-        roi = main.draw_roi(event, mouse_x, mouse_y)
-        if roi is not None and roi is not []:
-            client.sendData(f"r{roi}")
+    #if init_tracking:
+        #roi = main.draw_roi(event, mouse_x, mouse_y)
+        #if roi is not None and len(roi) == 4:
+            #client.sendData(f"r{roi}")
     if event == cv2.EVENT_LBUTTONDOWN:
         main.mouse_x = mouse_x
         main.mouse_y = mouse_y
@@ -92,10 +92,10 @@ joy_button.activate()
 increase_button = G.button("+","+", (650,380), 30, (100,100,100), (255,255,255))
 decrease_button = G.button("-","-", (700,380), 30, (100,100,100), (255,255,255))
 exit_button = G.button("X", "X", (750, 380), 40, (255,255,255), (0,0,255))
-roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
+#roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
-main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button, roi_button])
+main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
 main.create_border()
 
 try:

@@ -37,8 +37,7 @@ class VideoStream():
             raise Exception("sendFrame ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
 
     def getData(self):
-        if self.recv_data is not None:
-            return self.recv_data
+        self.recv_data
     
     def stop(self):
         if self.server is not None:
@@ -77,7 +76,8 @@ class VideoClient():
                     raise Exception("Etableringsforsøk ble avsluttet")
         
         self.stopped = False
-        self.emptyImg = np.zeros((580, 840, 3), dtype=np.uint8)
+        self.emptyImg = np.zeros((520, 740, 3), dtype=np.uint8)
+        self.emptyImg = cv2.putText(self.emptyImg, "Waiting for connection", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         self.frame = self.emptyImg
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
