@@ -11,12 +11,10 @@ stream = v.VideoStream(clientAddress="192.168.10.184")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
-dslr = cv2.VideoCapture(0)
-if not dslr.isOpened():
-    error_message = "Kunne ikke åpne DSLR"
-web = Picamera2()
-web.configure(web.create_preview_configuration(main={"format": 'XRGB8888', "size": (320, 240)}))
-web.start()
+dslr = cv2.VideoCapture(3)
+#web = Picamera2()
+#web.configure(web.create_preview_configuration(main={"format": 'XRGB8888', "size": (320, 240)}))
+#web.start()
 status.wait_for_connection()
 main = G.window()
 
@@ -27,15 +25,23 @@ try:
                 _,dslrFrame = dslr.read()
             else:
                 dslrFrame = np.zeros((480, 640, 3), dtype=np.uint8)
-                #cv2.putText(dslrFrame, error_message, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-            webFrame =web.capture_array()
+                cv2.putText(dslrFrame, "DSLR connection failed", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+            
+            try:
+                webFrame = web.capture_array()
+            except Exception as e:
+                print(f"Error capturing image from Picamera2: {str(e)}")
+                webFrame = np.zeros((240, 320, 3), dtype=np.uint8)
+                cv2.putText(webFrame, "Picamera connection failed", (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+
             data = stream.getData()
-            if data != None:
-                if data[0] == 'r':
-                    #fjern r fra strengen
-                    print(data)
-                    main.define_roi(data)
-            if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
+            #if data != None and len(data) != 0 and data != previous_data:
+                #if data[0] == 'r':
+                    #fjern r fra strengen, gjør det til liste (ikke streng)
+                    #data = eval(data[1:])
+                    #print(data)
+                    #main.define_roi(data)
+            #if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
                 status.dark()
                 print(data)
