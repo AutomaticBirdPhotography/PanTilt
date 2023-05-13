@@ -395,7 +395,25 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image[:, sector_start:sector_end] = color
 
     if text is not None:
-        contrast_color = (255, 255, 255)
-        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, contrast_color, 2, cv2.LINE_AA)
+        text_font = cv2.FONT_HERSHEY_SIMPLEX
+        text_scale = 0.6
+        text_thickness = 2
+        (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
+
+        # Beregn posisjonen for teksten
+        text_x = (width - text_width) // 2
+        text_y = (height + text_height) // 2
+
+        # Definer størrelsen på rektangelet bak teksten
+        rect_x = text_x - 20
+        rect_y = text_y-text_height - 20
+        rect_width = text_width + 40
+        rect_height = text_height + 40
+
+        # Fyll rektangelet med svart farge
+        image = cv2.rectangle(image, (rect_x, rect_y), (rect_x + rect_width, rect_y + rect_height), (0, 0, 0), -1)
+
+        # Skriv ut teksten på bildet
+        image = cv2.putText(image, text, (text_x, text_y), text_font, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
 
     return image
