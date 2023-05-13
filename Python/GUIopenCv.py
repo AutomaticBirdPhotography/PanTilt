@@ -373,17 +373,24 @@ def error_window(width: int, height: int) -> np.ndarray:
     Returns:
         numpy.ndarray: Et numpy-array som representerer bildet av den ikke-kontakt skjermen.
     """
+     # Opprett et tomt bilde
     image = np.zeros((height, width, 3), dtype=np.uint8)
 
-    # Definer størrelsen på hver celle i rutenettet
-    cell_size = 40
+    # Del vinduet inn i 5 like brede sektorer
+    num_sectors = 5
+    sector_width = width // num_sectors
 
-    for y in range(0, height, cell_size):
-        for x in range(0, width, cell_size):
-            # Bestem fargen for hver celle basert på dens posisjon
-            color = (255, 255, 255) if (x // cell_size + y // cell_size) % 2 == 0 else (0, 0, 0)
+    # Definer fargene for hver sektor
+    colors = [(255, 255, 255), (0, 255, 255), (0, 255, 0), (255, 0, 255), (0, 0, 255)]
 
-            # Fyll cellen med fargen
-            image[y:y+cell_size, x:x+cell_size] = color
+    # Gå gjennom hver sektor
+    for i in range(num_sectors):
+        # Hent fargen for gjeldende sektor
+        color = colors[i]
+
+        # Fyll sektoren med fargen
+        sector_start = i * sector_width
+        sector_end = (i + 1) * sector_width
+        image[:, sector_start:sector_end] = color
 
     return image
