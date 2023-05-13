@@ -5,12 +5,15 @@ import StatusLed as S
 from picamera2 import Picamera2
 import cv2
 import traceback
+import numpy as np
 
 stream = v.VideoStream(clientAddress="192.168.10.184")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
 dslr = cv2.VideoCapture(0)
+if not dslr.isOpened():
+    error_message = "Kunne ikke åpne DSLR"
 web = Picamera2()
 web.configure(web.create_preview_configuration(main={"format": 'XRGB8888', "size": (320, 240)}))
 web.start()
@@ -20,12 +23,17 @@ main = G.window()
 previous_data = None
 try:
     while True:
-            _,dslrFrame = dslr.read()
+            if dslr.isOpened(): #dersom kameraet ikke kunne åpnes vises svart bilde isteden
+                _,dslrFrame = dslr.read()
+            else:
+                dslrFrame = np.zeros((480, 640, 3), dtype=np.uint8)
+                #cv2.putText(dslrFrame, error_message, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
             webFrame =web.capture_array()
             data = stream.getData()
             if data != None:
                 if data[0] == 'r':
                     #fjern r fra strengen
+                    print(data)
                     main.define_roi(data)
             if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
