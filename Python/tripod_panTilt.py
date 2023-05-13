@@ -33,6 +33,7 @@ try:
                 webFrame = G.error_window(320, 240, "Picamera connection failed")
 
             data = stream.getData()
+
             #if data != None and len(data) != 0 and data != previous_data:
                 #if data[0] == 'r':
                     #fjern r fra strengen, gjør det til liste (ikke streng)
@@ -42,7 +43,6 @@ try:
             #if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None:
                 status.dark()
-                print(data)
                 arduino.send(data)
                 if data == "s":
                     break

@@ -38,7 +38,7 @@ class VideoStream():
             raise Exception("sendFrame ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
 
     def getData(self):
-        self.recv_data
+        return self.recv_data
     
     def stop(self):
         if self.server is not None:
