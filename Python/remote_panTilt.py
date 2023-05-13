@@ -89,9 +89,9 @@ home_button = G.button("Hjem", "Hjem", (120, 380), 40, (255, 255, 255), (188,32,
 align_button = G.button("+", "+", (230, 380), 40, (255, 255, 255), (0,255,12))
 joy_button = G.button("Stopp joy", "Joy", (280, 380), 40, (255, 255, 255), (188,32,12))
 joy_button.activate()
-increase_button = G.button("+","+", (450,380), 30, (100,100,100), (255,255,255))
-decrease_button = G.button("-","-", (500,380), 30, (100,100,100), (255,255,255))
-exit_button = G.button("X", "X", (550, 380), 40, (255,255,255), (0,0,255))
+increase_button = G.button("+","+", (470,380), 30, (100,100,100), (255,255,255))
+decrease_button = G.button("-","-", (520,380), 30, (100,100,100), (255,255,255))
+exit_button = G.button("X", "X", (570, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
