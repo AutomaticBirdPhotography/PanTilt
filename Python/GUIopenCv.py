@@ -395,6 +395,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image[:, sector_start:sector_end] = color
 
     if text is not None:
-        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+        contrast_color = get_contrast_color(image)
+        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, contrast_color, 2, cv2.LINE_AA)
 
     return image
