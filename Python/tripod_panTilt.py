@@ -24,8 +24,7 @@ try:
             if dslr.isOpened(): #dersom kameraet ikke kunne åpnes vises svart bilde isteden
                 _,dslrFrame = dslr.read()
             else:
-                dslrFrame = G.error_window(480, 640)
-                cv2.putText(dslrFrame, "DSLR connection failed", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+                dslrFrame = G.error_window(480, 640, "DSLR connection failed")
             
             try:
                 webFrame = web.capture_array()
