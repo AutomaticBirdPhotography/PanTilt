@@ -362,13 +362,14 @@ def get_contrast_color(bg_color):
         return (0, 0, 0)
         
 
-def error_window(width: int, height: int) -> np.ndarray:
+def error_window(width: int, height: int, text: str = None) -> np.ndarray:
     """
     Oppretter et bilde av en ikke-kontakt skjermeffekt.
 
     Parameters:
         width (int): Bredden på bildet.
         height (int): Høyden på bildet.
+        text (str): Tekst på bildet.
 
     Returns:
         numpy.ndarray: Et numpy-array som representerer bildet av den ikke-kontakt skjermen.
@@ -381,7 +382,7 @@ def error_window(width: int, height: int) -> np.ndarray:
     sector_width = width // num_sectors
 
     # Definer fargene for hver sektor
-    colors = [(255, 255, 255), (0, 255, 255), (0, 255, 0), (255, 0, 255), (0, 0, 255)]
+    colors = [(0, 255, 255), (0, 255, 0), (255, 0, 255), (255, 0, 255), (255, 255, 0)]
 
     # Gå gjennom hver sektor
     for i in range(num_sectors):
@@ -392,5 +393,8 @@ def error_window(width: int, height: int) -> np.ndarray:
         sector_start = i * sector_width
         sector_end = (i + 1) * sector_width
         image[:, sector_start:sector_end] = color
+
+    if text is not None:
+        cv2.putText(image, text, (5, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
     return image
