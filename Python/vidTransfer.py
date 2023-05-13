@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import ip_config
 import socket
+import GUIopenCv as G
 ip_configurator = ip_config.IPConfigurator()
 def configure_ip():
     ip_configurator.selectIP(invalid_ip=ip_configurator.clientAddress)
@@ -76,9 +77,9 @@ class VideoClient():
                     raise Exception("Etableringsforsøk ble avsluttet")
         
         self.stopped = False
-        self.emptyImg = np.zeros((520, 740, 3), dtype=np.uint8)
-        self.emptyImg = cv2.putText(self.emptyImg, "Waiting for connection", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-        self.frame = self.emptyImg
+        self.errorImg = G.error_window(520,740)
+        self.errorImg = cv2.putText(self.errorImg, "Waiting for connection", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        self.frame = self.errorImg
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
         self.thread.start()
@@ -93,7 +94,7 @@ class VideoClient():
                 self.server_data, in_frame = self.data
             
             else:
-                in_frame = self.emptyImg
+                in_frame = self.errorImg
 
             if np.any(in_frame):
                 self.frame = in_frame
