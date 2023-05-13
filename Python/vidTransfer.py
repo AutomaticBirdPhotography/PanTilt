@@ -77,7 +77,7 @@ class VideoClient():
                     raise Exception("Etableringsforsøk ble avsluttet")
         
         self.stopped = False
-        self.frame = self.errorImg = G.error_window(520,740, "Waiting for connection")
+        self.frame = self.errorImg = G.error_window(520,500, "Waiting for connection")
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
         self.thread.start()
@@ -90,7 +90,6 @@ class VideoClient():
             self.data = self.client.recv(return_data=self.target_data)
             if self.data is not None:
                 self.server_data, in_frame = self.data
-            
             else:
                 in_frame = self.errorImg
 
@@ -104,8 +103,7 @@ class VideoClient():
         """Stopper clienten, sender "s" til serveren"""
         self.stopped = True
         if self.client is not None:
-            self.sendData("s")
-            self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
+            self.client.recv(return_data="s")
             self.client.close()
 
     def __del__(self):
