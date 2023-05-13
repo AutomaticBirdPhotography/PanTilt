@@ -67,7 +67,7 @@ def buttonActions(x=None, y=None, button=None):
 def onMouse(event, mouse_x, mouse_y, flags, param):
     if init_tracking:
         roi = main.draw_roi(event, mouse_x, mouse_y)
-        if roi is not None:
+        if roi is not None and roi is not []:
             client.sendData(f"r{roi}")
     if event == cv2.EVENT_LBUTTONDOWN:
         main.mouse_x = mouse_x
