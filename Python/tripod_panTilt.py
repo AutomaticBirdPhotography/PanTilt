@@ -7,7 +7,7 @@ import cv2
 import traceback
 import numpy as np
 
-stream = v.VideoStream(clientAddress="192.168.10.184")
+stream = v.VideoStream(clientAddress="192.168.10.146")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
