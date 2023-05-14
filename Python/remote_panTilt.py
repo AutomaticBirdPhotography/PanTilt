@@ -83,14 +83,14 @@ joy = j.Controller(0)
 
 main = G.window("Frame", onMouse)
 
-enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
-home_button = G.button("Hjem", "Hjem", (120, 380), 40, (255, 255, 255), (188,32,12))
+enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=50, active_color=(0,255,0), deactive_color=(0,0,255))
+home_button = G.button("Hjem", "Hjem", (130, 380), 40, (255, 255, 255), (188,32,12))
 align_button = G.button("+", "+", (230, 380), 40, (255, 255, 255), (0,255,12))
 joy_button = G.button("Stopp joy", "Joy", (280, 380), 40, (255, 255, 255), (188,32,12))
 joy_button.activate()
 increase_button = G.button("+","+", (470,380), 30, (100,100,100), (255,255,255))
 decrease_button = G.button("-","-", (520,380), 30, (100,100,100), (255,255,255))
-exit_button = G.button("X", "X", (570, 380), 40, (255,255,255), (0,0,255))
+exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
