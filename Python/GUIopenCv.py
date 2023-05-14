@@ -254,14 +254,17 @@ class button():
         self.deactive_text = deactive_text
         self.deactive_color = deactive_color
 
+
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 1
         self.font_thicknes = 2
-        text_sizes_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
+        text_width_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
               cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0]]
-        largest_text_size = max(text_sizes_list, key=lambda x: x[0])
-        button_width = largest_text_size[0] + 20
-        self.end_point = (start_point[0]+button_width, start_point[1]+height)
+        
+        largest_text_width = max(text_width_list, key=lambda x: x[0])
+        self.button_width = largest_text_width[0] + 20
+        self.button_height = height
+        self.end_point = (start_point[0]+self.button_width, start_point[1]+height)
         self.active = False
         
 
@@ -282,10 +285,9 @@ class button():
             current_color = self.deactive_color
 
         current_text_color = get_contrast_color(current_color)
+        
+        self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position = self.start_point)
 
-        self.textsize = cv2.getTextSize(current_text, self.font, self.font_scale, self.font_thicknes)[0]
-        self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
-        self.textY = int((((self.end_point[1]-self.start_point[1]) + self.textsize[1]) / 2)+self.start_point[1])
         self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, current_color, -1)
         self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), self.font, self.font_scale, current_text_color, self.font_thicknes, cv2.LINE_AA)
 
@@ -400,9 +402,8 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         text_thickness = 2
         (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
 
-        # Beregn posisjonen for teksten
-        text_x = (width - text_width) // 2
-        text_y = (height + text_height) // 2
+        
+        text_x, text_y = calculate_center_text(width, height, text_width, text_height)
 
         # Definer størrelsen på rektangelet bak teksten
         rect_x = text_x - 20
@@ -417,3 +418,18 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image = cv2.putText(image, text, (text_x, text_y), text_font, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
 
     return image
+
+def calculate_center_text(frame_width : int, frame_height : int, text : str = None, text_width : int = None, text_height : int = None, text_offset_position : tuple = (0,0)):
+    """
+    text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
+    """
+    if text_width is None and text_height is None:
+        text_font = cv2.FONT_HERSHEY_SIMPLEX
+        text_scale = 0.6
+        text_thickness = 2
+        (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
+
+    # Beregn posisjonen for teksten
+    text_x = (frame_width - text_width) // 2 + text_offset_position[0]
+    text_y = (frame_height + text_height) // 2 + text_offset_position[1]
+    return text_x, text_y
