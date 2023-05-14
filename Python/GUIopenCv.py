@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-import ctypes
+from screeninfo import get_monitors
 
 class window():
     """
@@ -38,9 +38,9 @@ class window():
         self.objects = []
         self.border_width = 0 #endres til antall pixler hvis man setter "createBorder()"
         if win_name is not None:
-            skjerm_info = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
-            self.skjerm_bredde = skjerm_info[0]
-            self.skjerm_hoyde = skjerm_info[1]
+            skjerm_info = get_monitors()[0]
+            self.skjerm_bredde = skjerm_info.width
+            self.skjerm_hoyde = skjerm_info.height
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
             #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
@@ -401,9 +401,8 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         text_scale = 0.6
         text_thickness = 2
         (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
-
         
-        text_x, text_y = calculate_center_text(width, height, text_width, text_height)
+        text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
 
         # Definer størrelsen på rektangelet bak teksten
         rect_x = text_x - 20
@@ -428,7 +427,6 @@ def calculate_center_text(frame_width : int, frame_height : int, text : str = No
         text_scale = 0.6
         text_thickness = 2
         (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
-
     # Beregn posisjonen for teksten
     text_x = (frame_width - text_width) // 2 + text_offset_position[0]
     text_y = (frame_height + text_height) // 2 + text_offset_position[1]

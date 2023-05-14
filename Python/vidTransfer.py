@@ -77,7 +77,7 @@ class VideoClient():
                     raise Exception("Etableringsforsøk ble avsluttet")
         
         self.stopped = False
-        self.frame = self.errorImg = G.error_window(520,500, "Waiting for connection")
+        self.frame = self.errorImg = G.error_window(520, 500, "Waiting for connection")
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
         self.thread.start()
