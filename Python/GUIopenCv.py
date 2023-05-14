@@ -42,7 +42,7 @@ class window():
             self.skjerm_bredde = skjerm_info.width
             self.skjerm_hoyde = skjerm_info.height
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
                 cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             
@@ -258,11 +258,11 @@ class button():
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.font_scale = 1
         self.font_thicknes = 2
-        text_width_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
-              cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0]]
+        text_width_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0][0], 
+              cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0][0]]
         
-        largest_text_width = max(text_width_list, key=lambda x: x[0])
-        self.button_width = largest_text_width[0] + 20
+        largest_text_width = max(text_width_list)
+        self.button_width = largest_text_width + 20
         self.button_height = height
         self.end_point = (start_point[0]+self.button_width, start_point[1]+height)
         self.active = False
@@ -398,7 +398,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
 
     if text is not None:
         text_font = cv2.FONT_HERSHEY_SIMPLEX
-        text_scale = 0.6
+        text_scale = 1
         text_thickness = 2
         (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
         
