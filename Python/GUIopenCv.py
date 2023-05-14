@@ -42,7 +42,7 @@ class window():
             self.skjerm_bredde = skjerm_info.width
             self.skjerm_hoyde = skjerm_info.height
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
-            #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
                 cv2.setMouseCallback(self.win_name, self.function_on_mouse)
             
