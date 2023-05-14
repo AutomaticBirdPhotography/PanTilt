@@ -1,6 +1,5 @@
-#TODO: 
-# - vindu skal komme opp med en gang med info om lasting av program
-# - fixed aspect ratio på vinduet som kommer opp
+#TODO vinduet er ikke responsivt i starten
+#koble til joy skal printes en gang, nå printes evig
 
 import vidTransfer as v
 import GUIopenCv as G
@@ -81,7 +80,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
 
 joy = j.Controller(1)
 
-#TODO vinduet er ikke responsivt i starten
+
 main = G.window("Frame", onMouse)
 
 enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
