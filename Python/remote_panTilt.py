@@ -78,7 +78,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
                 client.sendData("p{:.3f},{:.3f}".format(distanceToPoint[0], distanceToPoint[1]))
     
 
-joy = j.Controller(1)
+joy = j.Controller(0)
 
 
 main = G.window("Frame", onMouse)
