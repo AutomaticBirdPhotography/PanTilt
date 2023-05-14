@@ -1,5 +1,6 @@
 #TODO vinduet er ikke responsivt i starten
 #koble til joy skal printes en gang, nå printes evig
+#knappene blir for korte, de skulle vært bredere
 
 import vidTransfer as v
 import GUIopenCv as G
