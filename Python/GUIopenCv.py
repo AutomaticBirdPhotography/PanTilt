@@ -244,6 +244,9 @@ class window():
         """Fjerner OpenCV-vinduene"""
         cv2.destroyAllWindows()
 
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+FONT_scale = 0.6
+FONT_thickness = 2
 
 class button():
     def __init__(self, active_text, deactive_text, start_point, height, active_color, deactive_color):
@@ -255,11 +258,11 @@ class button():
         self.deactive_color = deactive_color
 
 
-        self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.font_scale = 1
-        self.font_thicknes = 2
-        text_width_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0][0], 
-              cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0][0]]
+        FONT = cv2.FONT_HERSHEY_SIMPLEX
+        FONT_scale = 0.6
+        FONT_thicknes = 2
+        text_width_list = [cv2.getTextSize(active_text, FONT, FONT_scale, FONT_thicknes)[0][0], 
+              cv2.getTextSize(deactive_text, FONT, FONT_scale, FONT_thicknes)[0][0]]
         
         largest_text_width = max(text_width_list)
         self.button_width = largest_text_width + 20
@@ -289,7 +292,7 @@ class button():
         self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position = self.start_point)
 
         self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, current_color, -1)
-        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), self.font, self.font_scale, current_text_color, self.font_thicknes, cv2.LINE_AA)
+        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), FONT, FONT_scale, current_text_color, FONT_thickness, cv2.LINE_AA)
 
     def is_clicked(self, mouse_pos):
         """Skjekker om `mouse_pos` er over arealet til knappen
@@ -397,10 +400,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image[:, sector_start:sector_end] = color
 
     if text is not None:
-        text_font = cv2.FONT_HERSHEY_SIMPLEX
-        text_scale = 1
-        text_thickness = 2
-        (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
+        (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
         
         text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
 
@@ -414,7 +414,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         image = cv2.rectangle(image, (rect_x, rect_y), (rect_x + rect_width, rect_y + rect_height), (0, 0, 0), -1)
 
         # Skriv ut teksten på bildet
-        image = cv2.putText(image, text, (text_x, text_y), text_font, text_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
+        image = cv2.putText(image, text, (text_x, text_y), FONT, FONT_scale, (255, 255, 255), FONT_thickness, cv2.LINE_AA)
 
     return image
 
