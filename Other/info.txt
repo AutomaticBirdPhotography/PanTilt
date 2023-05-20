@@ -1,0 +1,25 @@
+cd /usr/share/applications
+sudo cp python3.9.desktop remote.desktop
+sudo nano remote.desktop
+
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=PanTilt Remote
+Icon=/home/remote/PanTilt/Other/remote.png
+Terminal=true
+Exec=/usr/bin/python3.9 /home/remote/PanTilt/remote_panTilt.py
+StartupNotify=false
+Categories=Other
+
+sudo cp remote.desktop shutdown.desktop
+sudo nano shutdown.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Shutdown
+Icon=/home/remote/PanTilt/Othershutdown.png
+Terminal=true
+Exec=/usr/bin/python3.9 /home/remote/PanTilt/Other/shutdown.py
+StartupNotify=false
+Categories=Other
