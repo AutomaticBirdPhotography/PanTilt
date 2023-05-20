@@ -1,5 +1,4 @@
 import pygame
-import time
 
 BUTTON_NUMBER_NAMES = { 0 : "X", 
                         1 : "A",
@@ -18,6 +17,7 @@ class Controller:
         self.index = index
         self.is_connected = False
         self.joystick = None
+        self.connection_warning = False
         self.connect_controller()
 
     def connect_controller(self):
@@ -28,9 +28,22 @@ class Controller:
         
         pygame.event.pump()
         pygame.joystick.init()
-        if pygame.joystick.get_count() == 0:
-            print("koble til joystick")
+
+        if not self.is_connected and pygame.joystick.get_count() == 0:
+            if not self.connection_warning:
+                print("koble til joystick")
+                self.connection_warning = True
             self.joystick = None
+
+        elif self.is_connected:
+            try:
+                self.joystick.init()
+            except pygame.error as e:
+                if str(e) == 'Invalid joystick device number':
+                    self.is_connected = False
+                    self.connection_warning = False
+                else:
+                    raise e
 
         else:
             try:
@@ -41,6 +54,7 @@ class Controller:
             except pygame.error as e:
                 if str(e) == 'Invalid joystick device number':
                     self.is_connected = False
+                    self.connection_warning = False
                 else: raise e
             
 
