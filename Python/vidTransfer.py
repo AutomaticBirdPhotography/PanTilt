@@ -13,7 +13,7 @@ def configure_ip():
 
 options = {
     "request_timeout": 5,
-    "max_retries": 20,
+    "max_retries": 35,
     "bidirectional_mode": True,
     "jpeg_compression": True,
     "jpeg_compression_quality": 95,
@@ -21,7 +21,7 @@ options = {
     "jpeg_compression_fastupsample": True,
 }
 class VideoStream():
-    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
+    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.4", port : str = "5454", framePercentage : int = 20) -> None:
         self.recv_data = None
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
