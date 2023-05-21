@@ -1,4 +1,4 @@
-#TODO vinduet er ikke responsivt i starten
+#TODO
 #koble til joy skal printes en gang, nå printes evig
 #knappene blir for korte, de skulle vært bredere
 
@@ -8,7 +8,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient()
+client = v.VideoClient(clientAddress="192.168.4.4")
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -22,6 +22,8 @@ def buttonActions(x=None, y=None, button=None):
     
     if exit_button.is_clicked((x,y)) or button == "BACK":
         joy_button.deactivate()
+        main.destroy()
+        raise Exception("Program avsluttet av bruker")
         run_program = False
 
     elif joy_button.is_clicked((x, y)) or button == "X":
@@ -65,6 +67,7 @@ def buttonActions(x=None, y=None, button=None):
     
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
+    print(event)
     #if init_tracking:
         #roi = main.draw_roi(event, mouse_x, mouse_y)
         #if roi is not None and len(roi) == 4:
