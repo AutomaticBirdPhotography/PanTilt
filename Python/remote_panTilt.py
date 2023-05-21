@@ -23,8 +23,9 @@ def buttonActions(x=None, y=None, button=None):
     if exit_button.is_clicked((x,y)) or button == "BACK":
         joy_button.deactivate()
         main.destroy()
-        raise Exception("Program avsluttet av bruker")
         run_program = False
+        raise Exception("Program avsluttet av bruker")
+        
 
     elif joy_button.is_clicked((x, y)) or button == "X":
         joy_button.toggle()
