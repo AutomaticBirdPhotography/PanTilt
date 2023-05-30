@@ -367,7 +367,7 @@ def get_contrast_color(bg_color):
         return (0, 0, 0)
         
 
-def error_window(width: int, height: int, text: str = None) -> np.ndarray:
+def error_window(width: int, height: int, text: str = "") -> np.ndarray:
     """
     Oppretter et bilde av en ikke-kontakt skjermeffekt.
 
@@ -399,7 +399,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         sector_end = (i + 1) * sector_width
         image[:, sector_start:sector_end] = color
 
-    if text is not None:
+    if text is not "":
         (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
         
         text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
@@ -418,11 +418,11 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
 
     return image
 
-def calculate_center_text(frame_width : int, frame_height : int, text : str = None, text_width : int = None, text_height : int = None, text_offset_position : tuple = (0,0)):
+def calculate_center_text(frame_width : int, frame_height : int, text : str = "", text_width : int = 0, text_height : int = 0, text_offset_position : tuple = (0,0)):
     """
     text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
     """
-    if text_width is None and text_height is None:
+    if text_width is 0 and text_height is 0:
         text_font = cv2.FONT_HERSHEY_SIMPLEX
         text_scale = 0.6
         text_thickness = 2

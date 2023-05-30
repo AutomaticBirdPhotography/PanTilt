@@ -8,7 +8,8 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.4.4")
+client = v.VideoClient()
+connected_to_tripod = client.is_connected
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -114,11 +115,14 @@ exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
-main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
+main.add_objects([exit_button])
 main.create_border()
 
 try:
     while run_program:
+        if connected_to_tripod:
+            main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
+
         frame = client.grabFrame()
         main.show(frame, value_factors[value_index])   #tar seg av "q"
 
@@ -127,7 +131,7 @@ try:
             last_button = clicked_button
             buttonActions(button=clicked_button)  #sjekk om det er blitt klikket med kontrolleren
 
-        if joy_button.active:
+        if joy_button.active and connected_to_tripod:
             data = f"{joy.get_joystick_position(0, value_factors[value_index])}, {joy.get_joystick_position(1, value_factors[value_index])}"
             if (data != last_data):
                 client.sendData(data)
@@ -136,8 +140,8 @@ except:
     traceback.print_exc()
 finally:
     try:
-        client.stop()   #Tar seg av å sende "s"
         main.destroy()
+        client.stop()   #Tar seg av å sende "s"
     except:
         traceback.print_exc()
         raise Exception("Alvorlige programfeil oppstod")
