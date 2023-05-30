@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-import ctypes
+from screeninfo import get_monitors
 
 class window():
     """
@@ -38,9 +38,9 @@ class window():
         self.objects = []
         self.border_width = 0 #endres til antall pixler hvis man setter "createBorder()"
         if win_name is not None:
-            skjerm_info = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
-            self.skjerm_bredde = skjerm_info[0]
-            self.skjerm_hoyde = skjerm_info[1]
+            skjerm_info = get_monitors()[0]
+            self.skjerm_bredde = skjerm_info.width
+            self.skjerm_hoyde = skjerm_info.height
             cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
             #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             if self.function_on_mouse is not None:
@@ -244,6 +244,10 @@ class window():
         """Fjerner OpenCV-vinduene"""
         cv2.destroyAllWindows()
 
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+FONT_scale = 0.6
+FONT_thickness = 2
+
 class button():
     def __init__(self, active_text, deactive_text, start_point, height, active_color, deactive_color):
         self.start_point = start_point
@@ -253,14 +257,17 @@ class button():
         self.deactive_text = deactive_text
         self.deactive_color = deactive_color
 
-        self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.font_scale = 1
-        self.font_thicknes = 2
-        text_sizes_list = [cv2.getTextSize(active_text, self.font, self.font_scale, self.font_thicknes)[0], 
-              cv2.getTextSize(deactive_text, self.font, self.font_scale, self.font_thicknes)[0]]
-        largest_text_size = max(text_sizes_list, key=lambda x: x[0])
-        button_width = largest_text_size[0] + 20
-        self.end_point = (start_point[0]+button_width, start_point[1]+height)
+
+        FONT = cv2.FONT_HERSHEY_SIMPLEX
+        FONT_scale = 0.6
+        FONT_thicknes = 2
+        text_width_list = [cv2.getTextSize(active_text, FONT, FONT_scale, FONT_thicknes)[0][0], 
+              cv2.getTextSize(deactive_text, FONT, FONT_scale, FONT_thicknes)[0][0]]
+        
+        largest_text_width = max(text_width_list)
+        self.button_width = largest_text_width + 20
+        self.button_height = height
+        self.end_point = (start_point[0]+self.button_width, start_point[1]+height)
         self.active = False
         
 
@@ -280,13 +287,12 @@ class button():
             current_text = self.deactive_text
             current_color = self.deactive_color
 
-        current_text_color = self.get_contrast_color(current_color)
+        current_text_color = get_contrast_color(current_color)
+        
+        self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position = self.start_point)
 
-        self.textsize = cv2.getTextSize(current_text, self.font, self.font_scale, self.font_thicknes)[0]
-        self.textX = int((((self.end_point[0]-self.start_point[0]) - self.textsize[0]) / 2)+self.start_point[0])
-        self.textY = int((((self.end_point[1]-self.start_point[1]) + self.textsize[1]) / 2)+self.start_point[1])
         self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, current_color, -1)
-        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), self.font, self.font_scale, current_text_color, self.font_thicknes, cv2.LINE_AA)
+        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), FONT, FONT_scale, current_text_color, FONT_thickness, cv2.LINE_AA)
 
     def is_clicked(self, mouse_pos):
         """Skjekker om `mouse_pos` er over arealet til knappen
@@ -326,36 +332,102 @@ class button():
         """Setter knappen til å være deaktivert - endrer utseende"""
         self.active = False
 
-    def get_contrast_color(self, bg_color):
-        """
-        Returnerer enten hvit eller svart, 
-        avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+def get_contrast_color(bg_color):
+    """
+    Returnerer enten hvit eller svart, 
+    avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
 
-        Parameters
-        ----------
-        bg_color : tuple
-            En tuple med tre verdier som representerer RGB-verdien
-            til bakgrunnsfargen.
+    Parameters
+    ----------
+    bg_color : tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til bakgrunnsfargen.
 
-        Returns
-        -------
-        tuple
-            En tuple med tre verdier som representerer RGB-verdien
-            til den beste teksten basert på bakgrunnsfargen.
-        """
-        # Konverter bakgrunnsfargen til gråskala
-        bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
+    Returns
+    -------
+    tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til den beste teksten basert på bakgrunnsfargen.
+    """
+    # Konverter bakgrunnsfargen til gråskala
+    bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
 
-        # Beregn luminansen til hvitt og svart
-        white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
-        black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
+    # Beregn luminansen til hvitt og svart
+    white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
+    black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
 
-        # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
-        white_contrast = abs(int(white_luminance) - int(bg_gray))
-        black_contrast = abs(int(black_luminance) - int(bg_gray))
+    # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
+    white_contrast = abs(int(white_luminance) - int(bg_gray))
+    black_contrast = abs(int(black_luminance) - int(bg_gray))
 
-        # Returner fargen med høyest kontrast
-        if white_contrast > black_contrast:
-            return (255, 255, 255)
-        else:
-            return (0, 0, 0)
+    # Returner fargen med høyest kontrast
+    if white_contrast > black_contrast:
+        return (255, 255, 255)
+    else:
+        return (0, 0, 0)
+        
+
+def error_window(width: int, height: int, text: str = None) -> np.ndarray:
+    """
+    Oppretter et bilde av en ikke-kontakt skjermeffekt.
+
+    Parameters:
+        width (int): Bredden på bildet.
+        height (int): Høyden på bildet.
+        text (str): Tekst på bildet.
+
+    Returns:
+        numpy.ndarray: Et numpy-array som representerer bildet av den ikke-kontakt skjermen.
+    """
+     # Opprett et tomt bilde
+    image = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Del vinduet inn i 5 like brede sektorer
+    num_sectors = 5
+    sector_width = width // num_sectors
+
+    # Definer fargene for hver sektor
+    colors = [(255, 255, 255), (0, 255, 255), (0, 255, 0), (255, 0, 255), (255, 255, 0)]
+
+    # Gå gjennom hver sektor
+    for i in range(num_sectors):
+        # Hent fargen for gjeldende sektor
+        color = colors[i]
+
+        # Fyll sektoren med fargen
+        sector_start = i * sector_width
+        sector_end = (i + 1) * sector_width
+        image[:, sector_start:sector_end] = color
+
+    if text is not None:
+        (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
+        
+        text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
+
+        # Definer størrelsen på rektangelet bak teksten
+        rect_x = text_x - 20
+        rect_y = text_y-text_height - 20
+        rect_width = text_width + 40
+        rect_height = text_height + 40
+
+        # Fyll rektangelet med svart farge
+        image = cv2.rectangle(image, (rect_x, rect_y), (rect_x + rect_width, rect_y + rect_height), (0, 0, 0), -1)
+
+        # Skriv ut teksten på bildet
+        image = cv2.putText(image, text, (text_x, text_y), FONT, FONT_scale, (255, 255, 255), FONT_thickness, cv2.LINE_AA)
+
+    return image
+
+def calculate_center_text(frame_width : int, frame_height : int, text : str = None, text_width : int = None, text_height : int = None, text_offset_position : tuple = (0,0)):
+    """
+    text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
+    """
+    if text_width is None and text_height is None:
+        text_font = cv2.FONT_HERSHEY_SIMPLEX
+        text_scale = 0.6
+        text_thickness = 2
+        (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
+    # Beregn posisjonen for teksten
+    text_x = (frame_width - text_width) // 2 + text_offset_position[0]
+    text_y = (frame_height + text_height) // 2 + text_offset_position[1]
+    return text_x, text_y

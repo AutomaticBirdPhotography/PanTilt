@@ -28,7 +28,7 @@ class TextPrint:
 
 def main():
     # Set the width and height of the screen (width, height), and name the window.
-    screen = pygame.display.set_mode((500, 700))
+    screen = pygame.display.set_mode((500, 400))
     pygame.display.set_caption("Joystick example")
 
     # Used to manage how fast the screen updates.

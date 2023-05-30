@@ -5,8 +5,9 @@ import StatusLed as S
 from picamera2 import Picamera2
 import cv2
 import traceback
+import numpy as np
 
-stream = v.VideoStream(clientAddress="192.168.10.184")
+stream = v.VideoStream(clientAddress="192.168.4.4")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
@@ -21,19 +22,30 @@ previous_data = None
 first_run = True
 try:
     while True:
-            _,dslrFrame = dslr.read()
-            webFrame =web.capture_array()
+            if dslr.isOpened(): #dersom kameraet ikke kunne åpnes vises svart bilde isteden
+                _,dslrFrame = dslr.read()
+            else:
+                dslrFrame = G.error_window(480, 640, "DSLR connection failed")
+            
+            try:
+                webFrame = web.capture_array()
+            except Exception as e:
+                print(f"Error capturing image from Picamera2: {str(e)}")
+                webFrame = G.error_window(320, 240, "Picamera connection failed")
+
             data = stream.getData()
-            if data != None:
-                if data[0] == 'r':
-                    #fjern r fra strengen
-                    main.define_roi(data)
-            if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
+
+            #if data != None and len(data) != 0 and data != previous_data:
+                #if data[0] == 'r':
+                    #fjern r fra strengen, gjør det til liste (ikke streng)
+                    #data = eval(data[1:])
+                    #print(data)
+                    #main.define_roi(data)
+            #if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None and len(data) > 0:
                 if first_run:
                     status.dark()
                     first_run = False
-                print(data)
                 if data[0] == "p":
                     data = data[:-1]
                 arduino.send(data)

@@ -1,6 +1,6 @@
-#TODO: 
-# - vindu skal komme opp med en gang med info om lasting av program
-# - fixed aspect ratio på vinduet som kommer opp
+#TODO
+#koble til joy skal printes en gang, nå printes evig
+#knappene blir for korte, de skulle vært bredere
 
 import vidTransfer as v
 import GUIopenCv as G
@@ -8,7 +8,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.10.184")
+client = v.VideoClient(clientAddress="192.168.4.4")
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -22,7 +22,10 @@ def buttonActions(x=None, y=None, button=None):
     
     if exit_button.is_clicked((x,y)) or button == "BACK":
         joy_button.deactivate()
+        main.destroy()
         run_program = False
+        raise Exception("Program avsluttet av bruker")
+        
 
     elif joy_button.is_clicked((x, y)) or button == "X":
         joy_button.toggle()
@@ -48,12 +51,12 @@ def buttonActions(x=None, y=None, button=None):
             client.sendData("a")
         align_button.deactivate()
     
-    elif roi_button.is_clicked((x,y)):
-        roi_button.toggle()
-        if roi_button.active:
-            init_tracking = True
-        else:
-            init_tracking = False
+    #elif roi_button.is_clicked((x,y)):
+        #roi_button.toggle()
+        #if roi_button.active:
+            #init_tracking = True
+        #else:
+            #init_tracking = False
 
     elif increase_button.is_clicked((x,y)) or button == "UP":
         if value_index < len(value_factors) - 1:
@@ -80,10 +83,11 @@ def send_point(distanceToPoint):
     previous_distance = distanceToPoint
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
-    if init_tracking:
-        roi = main.draw_roi(event, mouse_x, mouse_y)
-        if roi is not None:
-            client.sendData(f"r{roi}")
+    print(event)
+    #if init_tracking:
+        #roi = main.draw_roi(event, mouse_x, mouse_y)
+        #if roi is not None and len(roi) == 4:
+            #client.sendData(f"r{roi}")
     if event == cv2.EVENT_LBUTTONDOWN:
         main.mouse_x = mouse_x
         main.mouse_y = mouse_y
@@ -94,23 +98,23 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
                 send_point(distanceToPoint)
     
 
-joy = j.Controller(1)
+joy = j.Controller(0)
 
 
 main = G.window("Frame", onMouse)
 
-enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=70, active_color=(0,255,0), deactive_color=(0,0,255))
-home_button = G.button("Hjem", "Hjem", (120, 380), 40, (255, 255, 255), (188,32,12))
+enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=50, active_color=(0,255,0), deactive_color=(0,0,255))
+home_button = G.button("Hjem", "Hjem", (130, 380), 40, (255, 255, 255), (188,32,12))
 align_button = G.button("+", "+", (230, 380), 40, (255, 255, 255), (0,255,12))
 joy_button = G.button("Stopp joy", "Joy", (280, 380), 40, (255, 255, 255), (188,32,12))
 joy_button.activate()
-increase_button = G.button("+","+", (650,380), 30, (100,100,100), (255,255,255))
-decrease_button = G.button("-","-", (700,380), 30, (100,100,100), (255,255,255))
-exit_button = G.button("X", "X", (750, 380), 40, (255,255,255), (0,0,255))
-roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
+increase_button = G.button("+","+", (470,380), 30, (100,100,100), (255,255,255))
+decrease_button = G.button("-","-", (520,380), 30, (100,100,100), (255,255,255))
+exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
+#roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
-main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button, roi_button])
+main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
 main.create_border()
 
 try:

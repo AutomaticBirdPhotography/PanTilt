@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import ip_config
 import socket
+import GUIopenCv as G
 ip_configurator = ip_config.IPConfigurator()
 def configure_ip():
     ip_configurator.selectIP(invalid_ip=ip_configurator.clientAddress)
@@ -12,7 +13,7 @@ def configure_ip():
 
 options = {
     "request_timeout": 5,
-    "max_retries": 20,
+    "max_retries": 35,
     "bidirectional_mode": True,
     "jpeg_compression": True,
     "jpeg_compression_quality": 95,
@@ -20,7 +21,7 @@ options = {
     "jpeg_compression_fastupsample": True,
 }
 class VideoStream():
-    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.1", port : str = "5454", framePercentage : int = 20) -> None:
+    def __init__(self, logging : bool = True, clientAddress : str = "192.168.4.4", port : str = "5454", framePercentage : int = 20) -> None:
         self.recv_data = None
         self.server = NetGear(logging=logging, address=clientAddress, port=port, **options)
         self.percentage = framePercentage
@@ -37,8 +38,7 @@ class VideoStream():
             raise Exception("sendFrame ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
 
     def getData(self):
-        if self.recv_data is not None:
-            return self.recv_data
+        return self.recv_data
     
     def stop(self):
         if self.server is not None:
@@ -77,8 +77,7 @@ class VideoClient():
                     raise Exception("Etableringsforsøk ble avsluttet")
         
         self.stopped = False
-        self.emptyImg = np.zeros((580, 840, 3), dtype=np.uint8)
-        self.frame = self.emptyImg
+        self.frame = self.errorImg = G.error_window(600, 500, "Waiting for connection")
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
         self.thread.start()
@@ -91,9 +90,8 @@ class VideoClient():
             self.data = self.client.recv(return_data=self.target_data)
             if self.data is not None:
                 self.server_data, in_frame = self.data
-            
             else:
-                in_frame = self.emptyImg
+                in_frame = self.errorImg
 
             if np.any(in_frame):
                 self.frame = in_frame
@@ -105,8 +103,7 @@ class VideoClient():
         """Stopper clienten, sender "s" til serveren"""
         self.stopped = True
         if self.client is not None:
-            self.sendData("s")
-            self.grabFrame()    #Må være her for det er når bildet mottas at teksten sendes
+            self.client.recv(return_data="s")
             self.client.close()
 
     def __del__(self):
