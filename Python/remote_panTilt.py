@@ -64,6 +64,21 @@ def buttonActions(x=None, y=None, button=None):
             value_index -= 1
     
 
+previous_distance = None
+index = 0
+
+def send_point(distanceToPoint):
+    global previous_distance, index
+    
+    if previous_distance is None or distanceToPoint != previous_distance:
+        index = 0
+        client.sendData("p{:.3f},{:.3f}{}".format(distanceToPoint[0], distanceToPoint[1], index))
+    else:
+        index += 1
+        client.sendData("p{:.3f},{:.3f}{}".format(distanceToPoint[0], distanceToPoint[1], index))
+
+    previous_distance = distanceToPoint
+
 def onMouse(event, mouse_x, mouse_y, flags, param):
     if init_tracking:
         roi = main.draw_roi(event, mouse_x, mouse_y)
@@ -76,7 +91,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
         if not init_tracking:
             distanceToPoint = main.create_point(mouse_x, mouse_y)
             if distanceToPoint is not None:
-                client.sendData("p{:.3f},{:.3f}".format(distanceToPoint[0], distanceToPoint[1]))
+                send_point(distanceToPoint)
     
 
 joy = j.Controller(1)
