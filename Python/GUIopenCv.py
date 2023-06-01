@@ -174,41 +174,6 @@ class window():
         """Setter at det skal være en kant på `width`px til høyre, venstre og under"""
         self.border_width = width
 
-    def log(self, data: str):
-        """
-        Logger data til skjermen
-        """
-        #TODO her trengs en avbrytknapp
-        bakgrunn = np.zeros((self.skjerm_hoyde, self.skjerm_bredde, 3), dtype=np.uint8)
-
-        midtpunkt_x = int(self.skjerm_bredde / 2)
-        midtpunkt_y = int(self.skjerm_hoyde / 2)
-
-
-        tekst = data
-        tekst_tykkelse = 2
-        tekst_type = cv2.FONT_HERSHEY_SIMPLEX
-        tekst_scale = 1
-
-        tekst_storrelse, _ = cv2.getTextSize(tekst, tekst_type, tekst_scale, tekst_tykkelse)
-        tekst_bredde = tekst_storrelse[0]
-        tekst_hoyde = tekst_storrelse[1]
-        tekst_pos_x = midtpunkt_x - int(tekst_bredde / 2)
-        tekst_pos_y = midtpunkt_y + int(tekst_hoyde / 2)
-        cv2.putText(bakgrunn, tekst, (tekst_pos_x, tekst_pos_y), tekst_type, tekst_scale, (255,255,255), tekst_tykkelse, cv2.LINE_AA)
-
-        avbryt_bredde = 100
-        avbryt_hoyde = 70
-        avbryt = button("Avbryt", "Avbryt", (midtpunkt_x - int(avbryt_bredde/2), midtpunkt_y + int(avbryt_hoyde/2) + 50), avbryt_bredde, (0,0,255), (0,0,255))
-        avbryt.create(bakgrunn)
-
-        cv2.imshow(self.win_name, bakgrunn)
-        key = cv2.waitKey(10) & 0xFF
-        if key == ord("q") or avbryt.is_clicked((self.mouse_x, self.mouse_y)):
-            avbryt.toggle()
-            raise Exception("show ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
-
-
     def show(self, frame, value_factor = None):
         """Viser `frame` i et OpenCV-vindu. Oppdaterer objektene (knappene, border)\n
         Avsluttes med "q"
@@ -245,7 +210,7 @@ class window():
         cv2.destroyAllWindows()
 
 FONT = cv2.FONT_HERSHEY_SIMPLEX
-FONT_scale = 0.6
+FONT_scale = 1
 FONT_thickness = 2
 
 class button():
@@ -257,12 +222,8 @@ class button():
         self.deactive_text = deactive_text
         self.deactive_color = deactive_color
 
-
-        FONT = cv2.FONT_HERSHEY_SIMPLEX
-        FONT_scale = 0.6
-        FONT_thicknes = 2
-        text_width_list = [cv2.getTextSize(active_text, FONT, FONT_scale, FONT_thicknes)[0][0], 
-              cv2.getTextSize(deactive_text, FONT, FONT_scale, FONT_thicknes)[0][0]]
+        text_width_list = [cv2.getTextSize(active_text, FONT, FONT_scale, FONT_thickness)[0][0], 
+              cv2.getTextSize(deactive_text, FONT, FONT_scale, FONT_thickness)[0][0]]
         
         largest_text_width = max(text_width_list)
         self.button_width = largest_text_width + 20
@@ -289,11 +250,9 @@ class button():
 
         current_text_color = get_contrast_color(current_color)
         
-        self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position = self.start_point)
-
-        self.frame = cv2.rectangle(self.frame, self.start_point, self.end_point, current_color, -1)
-        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), FONT, FONT_scale, current_text_color, FONT_thickness, cv2.LINE_AA)
-
+        self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position=self.start_point)
+        self.frame = DrawRoundedRectangle(self.frame, self.start_point, self.end_point, radius=4, color=current_color, thickness=-1, line_type=cv2.LINE_AA)
+        self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), FONT, FONT_scale, current_text_color, FONT_thickness)
     def is_clicked(self, mouse_pos):
         """Skjekker om `mouse_pos` er over arealet til knappen
 
@@ -367,7 +326,7 @@ def get_contrast_color(bg_color):
         return (0, 0, 0)
         
 
-def error_window(width: int, height: int, text: str = None) -> np.ndarray:
+def error_window(width: int, height: int, text: str = "") -> np.ndarray:
     """
     Oppretter et bilde av en ikke-kontakt skjermeffekt.
 
@@ -399,7 +358,7 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
         sector_end = (i + 1) * sector_width
         image[:, sector_start:sector_end] = color
 
-    if text is not None:
+    if text is not "":
         (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
         
         text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
@@ -418,16 +377,46 @@ def error_window(width: int, height: int, text: str = None) -> np.ndarray:
 
     return image
 
-def calculate_center_text(frame_width : int, frame_height : int, text : str = None, text_width : int = None, text_height : int = None, text_offset_position : tuple = (0,0)):
+def calculate_center_text(frame_width : int, frame_height : int, text : str = "", text_width : int = 0, text_height : int = 0, text_offset_position : tuple = (0,0)):
     """
     text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
     """
-    if text_width is None and text_height is None:
-        text_font = cv2.FONT_HERSHEY_SIMPLEX
-        text_scale = 0.6
-        text_thickness = 2
-        (text_width, text_height), _ = cv2.getTextSize(text, text_font, text_scale, text_thickness)
+    if text_width is 0 and text_height is 0:
+        (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
     # Beregn posisjonen for teksten
     text_x = (frame_width - text_width) // 2 + text_offset_position[0]
     text_y = (frame_height + text_height) // 2 + text_offset_position[1]
     return text_x, text_y
+
+def DrawRoundedRectangle(frame, topLeft, bottomRight, radius=1, color=255, thickness=1, line_type=cv2.LINE_AA):
+    min_half = int(min((bottomRight[0] - topLeft[0]), (bottomRight[1] - topLeft[1])) * 0.5)
+    radius = min(radius, min_half)
+
+    # /* corners:
+    #  * p1 - p2
+    #  * |     |
+    #  * p4 - p3
+    #  */
+    p1 = topLeft
+    p2 = (bottomRight[0], topLeft[1])
+    p3 = bottomRight
+    p4 = (topLeft[0], bottomRight[1])
+
+    if(thickness < 0):
+        # // draw rectangle
+        cv2.rectangle(frame, (p1[0] + radius, p1[1]),  (p3[0] - radius, p3[1]), color, thickness, line_type)
+        cv2.rectangle(frame, (p1[0], p1[1] + radius),  (p3[0], p3[1] - radius), color, thickness, line_type)
+    else:
+        # // draw straight lines
+        cv2.line(frame, (p1[0] + radius, p1[1]),  (p2[0] - radius, p2[1]), color, thickness, line_type)
+        cv2.line(frame, (p2[0], p2[1] + radius),  (p3[0], p3[1] - radius), color, thickness, line_type)
+        cv2.line(frame, (p4[0] + radius, p4[1]),  (p3[0]-radius, p3[1]), color, thickness, line_type)
+        cv2.line(frame, (p1[0], p1[1] + radius),  (p4[0], p4[1] - radius), color, thickness, line_type)
+
+    # // draw arcs
+    if(radius > 0):
+        cv2.ellipse( frame, (p1[0] + radius, p1[1] + radius), ( radius, radius ), 180.0, 0, 90, color, thickness, line_type )
+        cv2.ellipse( frame, (p2[0] - radius, p2[1] + radius), ( radius, radius ), 270.0, 0, 90, color, thickness, line_type )
+        cv2.ellipse( frame, (p3[0] - radius, p3[1] - radius), ( radius, radius ), 0.0, 0, 90, color, thickness, line_type )
+        cv2.ellipse( frame, (p4[0] + radius, p4[1] - radius), ( radius, radius ), 90.0, 0, 90, color, thickness, line_type )
+    return frame

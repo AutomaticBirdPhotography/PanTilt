@@ -19,6 +19,7 @@ status.wait_for_connection()
 main = G.window()
 
 previous_data = None
+first_run = True
 try:
     while True:
             if dslr.isOpened(): #dersom kameraet ikke kunne åpnes vises svart bilde isteden
@@ -41,8 +42,12 @@ try:
                     #print(data)
                     #main.define_roi(data)
             #if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
-            if data != previous_data and data != None:
-                status.dark()
+            if data != previous_data and data != None and len(data) > 0:
+                if first_run:
+                    status.dark()
+                    first_run = False
+                if data[0] == "p":
+                    data = data[:-1]
                 arduino.send(data)
                 if data == "s":
                     break

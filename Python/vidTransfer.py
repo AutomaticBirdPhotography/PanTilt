@@ -58,6 +58,7 @@ class VideoClient():
             `clientAddress` 
                 "auto" eller adresse, typ.: "192.168.10.184"
         """
+        self.is_connected = False
         self.client = None
         self.server_data = None
         if clientAddress == "auto":
@@ -83,12 +84,14 @@ class VideoClient():
         self.thread.start()
 
     def sendData(self, data):
-        self.target_data = data
+        if self.is_connected:
+            self.target_data = data
     
     def _grabFrameLoop(self):
         while not self.stopped:
             self.data = self.client.recv(return_data=self.target_data)
             if self.data is not None:
+                self.is_connected = True
                 self.server_data, in_frame = self.data
             else:
                 in_frame = self.errorImg
@@ -103,7 +106,8 @@ class VideoClient():
         """Stopper clienten, sender "s" til serveren"""
         self.stopped = True
         if self.client is not None:
-            self.client.recv(return_data="s")
+            if self.is_connected:  #hvis den ikke er tilkoblet vil det ikke gå å skulle sende "s"
+                self.client.recv(return_data="s")
             self.client.close()
 
     def __del__(self):

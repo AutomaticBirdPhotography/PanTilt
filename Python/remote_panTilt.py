@@ -9,6 +9,7 @@ import cv2
 import traceback #gir info om feilmeldinger
 
 client = v.VideoClient()
+connected_to_tripod = client.is_connected
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -67,6 +68,21 @@ def buttonActions(x=None, y=None, button=None):
             value_index -= 1
     
 
+previous_distance = None
+index = 0
+
+def send_point(distanceToPoint):
+    global previous_distance, index
+    
+    if previous_distance is None or distanceToPoint != previous_distance:
+        index = 0
+        client.sendData("p{:.3f},{:.3f}{}".format(distanceToPoint[0], distanceToPoint[1], index))
+    else:
+        index += 1
+        client.sendData("p{:.3f},{:.3f}{}".format(distanceToPoint[0], distanceToPoint[1], index))
+
+    previous_distance = distanceToPoint
+
 def onMouse(event, mouse_x, mouse_y, flags, param):
     print(event)
     #if init_tracking:
@@ -80,7 +96,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
         if not init_tracking:
             distanceToPoint = main.create_point(mouse_x, mouse_y)
             if distanceToPoint is not None:
-                client.sendData("p{:.3f},{:.3f}".format(distanceToPoint[0], distanceToPoint[1]))
+                send_point(distanceToPoint)
     
 
 joy = j.Controller(0)
@@ -88,22 +104,26 @@ joy = j.Controller(0)
 
 main = G.window("Frame", onMouse)
 
-enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(40,380), height=50, active_color=(0,255,0), deactive_color=(0,0,255))
-home_button = G.button("Hjem", "Hjem", (130, 380), 40, (255, 255, 255), (188,32,12))
-align_button = G.button("+", "+", (230, 380), 40, (255, 255, 255), (0,255,12))
-joy_button = G.button("Stopp joy", "Joy", (280, 380), 40, (255, 255, 255), (188,32,12))
+enable_button = G.button(active_text="ON", deactive_text="OFF", start_point=(30,380), height=40, active_color=(0,255,0), deactive_color=(0,0,255))
+home_button = G.button("Hjem", "Hjem", (120, 380), 40, (255, 255, 255), (188,32,12))
+align_button = G.button("+", "+", (240, 380), 40, (255, 255, 255), (0,255,12))
+joy_button = G.button("Stopp joy", "Joy", (300, 380), 40, (255, 255, 255), (188,32,12))
 joy_button.activate()
-increase_button = G.button("+","+", (470,380), 30, (100,100,100), (255,255,255))
-decrease_button = G.button("-","-", (520,380), 30, (100,100,100), (255,255,255))
+increase_button = G.button("+","+", (470,380), 40, (100,100,100), (255,255,255))
+decrease_button = G.button("-","-", (520,380), 40, (100,100,100), (255,255,255))
 exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
+#main.add_objects([exit_button])
 main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
 main.create_border()
 
 try:
     while run_program:
+        if connected_to_tripod:
+            main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
+
         frame = client.grabFrame()
         main.show(frame, value_factors[value_index])   #tar seg av "q"
 
@@ -112,7 +132,7 @@ try:
             last_button = clicked_button
             buttonActions(button=clicked_button)  #sjekk om det er blitt klikket med kontrolleren
 
-        if joy_button.active:
+        if joy_button.active and connected_to_tripod:
             data = f"{joy.get_joystick_position(0, value_factors[value_index])}, {joy.get_joystick_position(1, value_factors[value_index])}"
             if (data != last_data):
                 client.sendData(data)
@@ -121,8 +141,8 @@ try:
 finally:
     traceback.print_exc()
     try:
-        client.stop()   #Tar seg av å sende "s"
         main.destroy()
+        client.stop()   #Tar seg av å sende "s"
     except:
         traceback.print_exc()
         raise Exception("Alvorlige programfeil oppstod")
