@@ -4,7 +4,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.10.146")
+client = v.VideoClient(clientAddress="192.168.10.145")
 connected_to_tripod = client.is_connected
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
@@ -132,9 +132,11 @@ try:
             if (data != last_data):
                 client.sendData(data)
             last_data = data
-  
-finally:
+
+except:
     traceback.print_exc()
+finally:
+    
     try:
         main.destroy()
         client.stop()   #Tar seg av å sende "s"
