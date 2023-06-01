@@ -136,7 +136,6 @@ try:
 except:
     traceback.print_exc()
 finally:
-    
     try:
         main.destroy()
         client.stop()   #Tar seg av å sende "s"
