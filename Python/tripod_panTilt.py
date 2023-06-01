@@ -3,9 +3,7 @@ import GUIopenCv as G
 import ArduinoSerial as A
 import StatusLed as S
 from picamera2 import Picamera2
-import cv2
-import traceback
-import numpy as np
+import cv2, traceback, os
 
 stream = v.VideoStream(clientAddress="192.168.4.4")
 arduino = A.Arduino("/dev/ttyUSB0")
@@ -65,3 +63,4 @@ finally:
     main.destroy()
     stream.server.close()
     stream.stop()
+    #os.system("sudo shutdown -h now") #skrur av rpi ved stoppkomando/break
