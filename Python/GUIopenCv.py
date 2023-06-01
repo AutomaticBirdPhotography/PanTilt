@@ -358,7 +358,7 @@ def error_window(width: int, height: int, text: str = "") -> np.ndarray:
         sector_end = (i + 1) * sector_width
         image[:, sector_start:sector_end] = color
 
-    if text is not "":
+    if text != "":
         (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
         
         text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
@@ -381,7 +381,7 @@ def calculate_center_text(frame_width : int, frame_height : int, text : str = ""
     """
     text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
     """
-    if text_width is 0 and text_height is 0:
+    if text_width == 0 and text_height == 0:
         (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
     # Beregn posisjonen for teksten
     text_x = (frame_width - text_width) // 2 + text_offset_position[0]

@@ -4,7 +4,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient()
+client = v.VideoClient(clientAddress="192.168.10.145")
 connected_to_tripod = client.is_connected
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
@@ -80,7 +80,6 @@ def send_point(distanceToPoint):
     previous_distance = distanceToPoint
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
-    print(event)
     #if init_tracking:
         #roi = main.draw_roi(event, mouse_x, mouse_y)
         #if roi is not None and len(roi) == 4:
@@ -111,12 +110,12 @@ exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
 
 
-#main.add_objects([exit_button])
-main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
+main.add_objects([exit_button])
 main.create_border()
 
 try:
     while run_program:
+        connected_to_tripod = client.is_connected
         if connected_to_tripod:
             main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
 
@@ -133,9 +132,10 @@ try:
             if (data != last_data):
                 client.sendData(data)
             last_data = data
-  
-finally:
+
+except:
     traceback.print_exc()
+finally:
     try:
         main.destroy()
         client.stop()   #Tar seg av å sende "s"
