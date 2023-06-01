@@ -8,7 +8,7 @@ import joyinput as j
 import cv2
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.4.4")
+client = v.VideoClient()
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
@@ -117,9 +117,9 @@ try:
             if (data != last_data):
                 client.sendData(data)
             last_data = data
-except:
-    traceback.print_exc()
+  
 finally:
+    traceback.print_exc()
     try:
         client.stop()   #Tar seg av å sende "s"
         main.destroy()
