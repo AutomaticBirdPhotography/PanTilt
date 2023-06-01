@@ -23,3 +23,9 @@ Terminal=true
 Exec=/usr/bin/python3.9 /home/remote/PanTilt/Other/shutdown.py
 StartupNotify=false
 Categories=Other
+
+
+Tripod:
+sudo crontab -e
+
+@reboot python /home/pi/PanTilt/Python/tripod_panTilt.py
