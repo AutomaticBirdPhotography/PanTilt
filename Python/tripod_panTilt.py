@@ -5,7 +5,7 @@ import StatusLed as S
 from picamera2 import Picamera2
 import cv2, traceback, os
 
-stream = v.VideoStream(clientAddress="192.168.4.4")
+stream = v.VideoStream(clientAddress="192.168.10.145")
 arduino = A.Arduino("/dev/ttyUSB0")
 
 status = S.LEDstatus()
@@ -32,6 +32,8 @@ try:
                 webFrame = G.error_window(320, 240, "Picamera connection failed")
 
             data = stream.getData()
+            if data is None:
+                data = "d"
 
             #if data != None and len(data) != 0 and data != previous_data:
                 #if data[0] == 'r':
@@ -41,12 +43,14 @@ try:
                     #main.define_roi(data)
             #if main.TRACK(dslrFrame) != None: data = main.TRACK(dslrFrame)
             if data != previous_data and data != None and len(data) > 0:
-                if first_run:
+                if first_run and data != "d":   #data er som standard "d"
                     status.dark()
                     first_run = False
                 if data[0] == "p":
-                    data = data[:-1]
-                arduino.send(data)
+                    formatted_data = data[:-1]
+                    arduino.send(formatted_data)
+                else:
+                    arduino.send(data)
                 if data == "s":
                     break
             result = main.create_multiple(webFrame, dslrFrame)
