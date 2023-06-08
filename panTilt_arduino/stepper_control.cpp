@@ -41,7 +41,6 @@ void Stepper_control::homeSteppers() {
   bool steppersStillRunning = true;
 
   while (steppersStillRunning) {
-    Serial.println(vSpeedSmoothing.getRemainingSteps());
     hSpeedSmooth = hSpeedSmoothing.speedUpdate(0, horisontal.currentPosition());
     horisontal.setSpeed(hSpeedSmooth);
     horisontal.runSpeed();
@@ -98,6 +97,12 @@ void Stepper_control::steppersDriveToPosition(float in_horisontalAlignPos, float
 
 void Stepper_control::disableSteppers() {
   vertikal.disableOutputs();
+  vSpeedSmoothing.reset();
+  hSpeedSmoothing.reset();
+  vertikal.setSpeed(0);
+  horisontal.setSpeed(0);
+  vertikal.runSpeed();
+  horisontal.runSpeed();
 }
 
 void Stepper_control::enableSteppers() {

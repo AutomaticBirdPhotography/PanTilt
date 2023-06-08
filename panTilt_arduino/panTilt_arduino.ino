@@ -97,15 +97,7 @@ void loop() {
       int initHsteps = stepper.getCurrentHsteps();
       while (steppersStillRunning) {
         gjenMove = totalMove+stepper.getCurrentHsteps();
-        Serial.print(stepper.getCurrentHsteps());
-        Serial.print("\t");
-        Serial.print(gjenMove);
-        Serial.print("\t");
-        Serial.print(totalMove);
-        Serial.print("\t");
-        Serial.println(getOldPosPan());
         float alignPanServo = map(gjenMove, 0, totalMove, 90 + getPan_offset(), 180-initOldPosPan);
-        //Serial.println(alignPanServo);
         positionMovePanServo(alignPanServo);
         stepper.steppersDriveToPosition(horisontalAlignPos, vertikalAlignPos);
         steppersStillRunning = stepper.steppersRunning();
