@@ -27,10 +27,10 @@ class VideoStream():
         self.percentage = framePercentage
 
     def sendFrame(self, frame):
-        self.frame = frame
-        if self.frame is not None:
-            self.frame = reducer(self.frame, self.percentage)
-            self.recv_data = self.server.send(self.frame)
+        self.frame = G.ensure_valid_frame(frame)
+        self.frame = reducer(self.frame, self.percentage)
+        self.recv_data = self.server.send(self.frame)
+
         key = cv2.waitKey(10) & 0xFF
         if key == ord("q"):
             self.stop()
@@ -58,6 +58,8 @@ class VideoClient():
             `clientAddress` 
                 "auto" eller adresse, typ.: "192.168.10.184"
         """
+        self.logging = logging
+        self.port = port
         self.is_connected = False
         self.client = None
         self.server_data = None
@@ -66,16 +68,9 @@ class VideoClient():
         else:
             self.clientAddress = clientAddress
         ip_configurator.clientAddress = self.clientAddress
-        while True:
-            try:
-                self.client = NetGear(receive_mode=True, logging=logging, address=self.clientAddress, port=port, **options)
-                self.target_data = None
-                break
-            except:
-                configure_ip()
-                self.clientAddress = ip_configurator.clientAddress
-                if ip_configurator.closed:
-                    raise Exception("Etableringsforsøk ble avsluttet")
+        
+        self.establish_connection()
+        
         
         self.stopped = False
         self.frame = self.errorImg = G.error_window(600, 500, "Waiting for connection")
@@ -83,23 +78,40 @@ class VideoClient():
         self.thread.daemon = True
         self.thread.start()
 
+    def establish_connection(self):
+        while True:
+            try:
+                self.client = NetGear(receive_mode=True, logging=self.logging, address=self.clientAddress, port=self.port, **options)
+                self.target_data = None
+                break
+            except:
+                configure_ip()
+                self.clientAddress = ip_configurator.clientAddress
+                if ip_configurator.closed:
+                    raise Exception("Etableringsforsøk ble avsluttet")
+
     def sendData(self, data):
         if self.is_connected:
             self.target_data = data
     
     def _grabFrameLoop(self):
         while not self.stopped:
-            self.data = self.client.recv(return_data=self.target_data)
-            if self.data is not None:
-                self.is_connected = True
-                self.server_data, in_frame = self.data
+            if self.client is not None:
+                self.data = self.client.recv(return_data=self.target_data)
+                if self.data is not None:
+                    self.is_connected = True
+                    self.server_data, in_frame = self.data
+                    frame = G.ensure_valid_frame(in_frame)
+                else:
+                    frame = self.errorImg
             else:
-                in_frame = self.errorImg
+                frame = self.errorImg
 
-            if np.any(in_frame):
-                self.frame = in_frame
+            self.frame = frame
+                           
 
     def grabFrame(self):
+        """Mottar bildet forsikrer seg om at det er et gyldig bilde, hvis ikke errorbilde"""
         return self.frame
     
     def stop(self):

@@ -1,7 +1,58 @@
+#TODO:
+# - i create_point brukes self.frame_width, men denne defineres ikke før i show
+
 import cv2
 import numpy as np
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 from screeninfo import get_monitors
+standard_frame_size = (600,500)
+standard_screen_size = (640,480)
+screen_size_offset = 200    #+- hvor mange piksler skjærmstørrelsen kan avvike fra standard før den går til standard
+
+def get_screen_size():
+    screen_info = get_monitors()[0]
+    width = screen_info.width
+    height = screen_info.height
+
+    if width > standard_screen_size[0] + screen_size_offset or width < standard_screen_size[0] - screen_size_offset:
+        width = standard_screen_size[0]
+    
+    if height > standard_screen_size[1] + screen_size_offset or height < standard_screen_size[1] - screen_size_offset:
+        height = standard_screen_size[1]
+    
+    return (width, height)
+
+def ensure_valid_frame(frame):
+    """ Returnerer `frame` bare hvis `frame` er et gyldig bilde og ikke avviker for mye fra standard
+    bildestørrelse"""
+    if np.any(frame) and type(frame) == np.ndarray:             # Sjekker at det er rett type
+        try:
+            frame_width, frame_height = get_frame_size(frame)   # Prøver å ta størrelsen på bildet, hvis den feiler, blir det error_window
+            if frame_height < 50 or frame_height > 2000 or frame_width < 50 or frame_width > 2000:      # Dersom størrelsen på bildet er helt feil, blir det error_window
+                frame = error_window()
+            else:
+                frame = frame
+        except:
+            frame = error_window()
+    else:
+        frame = error_window()
+    return frame
+
+def get_frame_size(frame):
+    frame_height = frame.shape[0]
+    frame_width = frame.shape[1]
+    return (frame_width, frame_height)
+
+def create_cv2_window(window_name, function_on_mouse = None):
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            #cv2.setWindowProperty(win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        if function_on_mouse is not None:
+            cv2.setMouseCallback(window_name, function_on_mouse)
+
+def draw_border(frame, border_width):
+    if (border_width > 0):
+            frame = cv2.copyMakeBorder(frame, 0, border_width, border_width, border_width, cv2.BORDER_CONSTANT, value=0)
+    return frame
 
 class window():
     """
@@ -22,9 +73,8 @@ class window():
         self.aspect_ratio = 3/4 #endres i samsvar med PanTilt
 
         self.win_name = win_name
-        self.function_on_mouse = function_on_mouse
-        self.x = -1
-        self.y = -1
+        self.point_x = None
+        self.point_y = None
         self.mouse_x = None
         self.mouse_y = None
 
@@ -37,18 +87,14 @@ class window():
 
         self.objects = []
         self.border_width = 0 #endres til antall pixler hvis man setter "createBorder()"
+
         if win_name is not None:
-            skjerm_info = get_monitors()[0]
-            self.skjerm_bredde = skjerm_info.width
-            self.skjerm_hoyde = skjerm_info.height
-            cv2.namedWindow(self.win_name, cv2.WINDOW_NORMAL)
-            #cv2.setWindowProperty(self.win_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            if self.function_on_mouse is not None:
-                cv2.setMouseCallback(self.win_name, self.function_on_mouse)
+            create_cv2_window(win_name, function_on_mouse)
+
+            screen_width, screen_height = get_screen_size()
             
-            bakgrunn = np.zeros((self.skjerm_hoyde, self.skjerm_bredde, 3), dtype=np.uint8)
+            bakgrunn = error_window(screen_width, screen_height)
             self.show(bakgrunn)
-            
 
     def add_objects(self, objects: list):
         """
@@ -58,30 +104,6 @@ class window():
             objects (list): A list of objects to add to the window.
         """
         self.objects = objects
-
-    
-    def create_multiple(self, left_frame, right_frame):
-        """
-        Creates a new image consisting of the given frames.
-
-        Parameters:
-            right_frame (numpy.ndarray): The frame to place on the right side of
-                the new image.
-            left_frame (numpy.ndarray): The frame to place on the left side of the
-                new image.
-
-        Returns:
-            numpy.ndarray: The new image consisting of the given frames.
-        """
-        left_frame = left_frame[..., :3]
-        left_frame = cv2.rotate(left_frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        l_height, l_width, l_channels = left_frame.shape
-        r_height, r_width, r_channels = right_frame.shape
-        result = np.zeros((max(l_height, r_height), l_width+r_width, l_channels), dtype=np.uint8)
-        left_frame = cv2.filter2D(left_frame, -1, kernel)
-        result[:l_height,:l_width] = left_frame
-        result[:r_height, l_width:l_width+r_width] = right_frame        
-        return result
 
     def create_point(self, x:int, y:int):
         """
@@ -99,18 +121,21 @@ class window():
         tuple or None
             The degrees offset from the center of the frame if the point is within the frame, otherwise None
         """
-        self.x = x
-        self.y = y
-        if (self.x > self.frame_width-self.dslr_width-self.border_width and self.x < self.frame_width-self.border_width and self.y > 0 and self.y < self.frame_height-self.border_width):
+        if (self.point_x > self.frame_width-self.dslr_width-self.border_width and self.point_x < self.frame_width-self.border_width and self.point_y > 0 and self.point_y < self.frame_height-self.border_width):
+            self.point_x = x  #setter self.point_x som det punktet skal være, dette håndteres av show()
+            self.point_y = y
+            
             degrees_per_pixel = self.vertical_angle/self.frame_height
-            horisontal_offset = self.x-self.frame_width/2 #pixler unna senter
-            vertiacal_offset = self.y-self.frame_height/2
+            horisontal_offset = self.point_x-self.frame_width/2 #pixler unna senter
+            vertiacal_offset = self.point_y-self.frame_height/2
             return (degrees_per_pixel*horisontal_offset, degrees_per_pixel*vertiacal_offset)
-        else: return None
+        else: 
+            self.point_x = None
+            self.point_y = None
+            return None
     
     def create_center_point(self, frame):
-        frame_height = frame.shape[0]
-        frame_width = frame.shape[1]
+        frame_width, frame_height = get_frame_size(frame)
         x = int(frame_width/2)
         y = int(frame_height/2)
         cv2.rectangle(frame, (x, y), (x, y), (0,0,255), 5)
@@ -150,8 +175,7 @@ class window():
         self.tracker = None
 
     def TRACK(self, frame):
-        frame_height = frame.shape[0]
-        frame_width = frame.shape[1]
+        frame_width, frame_height = get_frame_size(frame)
         x = int(frame_width/2)
         y = int(frame_height/2)
         track_center = [x,y]
@@ -172,7 +196,8 @@ class window():
 
     def create_border(self, width: int = 50):
         """Setter at det skal være en kant på `width`px til høyre, venstre og under"""
-        self.border_width = width
+        if width > 0:
+            self.border_width = width
 
     def show(self, frame, value_factor = None):
         """Viser `frame` i et OpenCV-vindu. Oppdaterer objektene (knappene, border)\n
@@ -183,23 +208,29 @@ class window():
         frame : array
             Bildet som skal vises
         """
-        if (self.border_width > 0):
-            frame = cv2.copyMakeBorder(frame, 0,self.border_width,self.border_width,self.border_width, cv2.BORDER_CONSTANT, value=0)
-        self.frame_height = frame.shape[0]
-        self.frame_width = frame.shape[1]
+        self.frame_width, self.frame_height = get_frame_size(frame)
         self.dslr_width = (self.frame_height-self.border_width)/self.aspect_ratio
+
+        draw_border(frame, self.border_width)        
         
-        if (self.x > self.frame_width-self.dslr_width-self.border_width and self.x < self.frame_width-self.border_width and self.y > 0 and self.y < self.frame_height-self.border_width):
-            cv2.rectangle(frame, (self.x, self.y), (self.x, self.y), (0,0,255), 5)
-            self.x = -1
-            self.y = -1
+        # Tegner punktet
+        if (self.point_x is not None and self.point_y is not None):
+            cv2.rectangle(frame, (self.point_x, self.point_y), (self.point_x, self.point_y), (0,0,255), 5)
+            self.point_x = None
+            self.point_y = None
+
+        # Legger til objektene (knappene)
         for e in self.objects: e.create(frame)
+
+        # Skriver inn verdien til value_factor i øver venstre hjørne
         if (value_factor is not None):
             cv2.putText(frame, str(int(100*value_factor)), (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2, cv2.LINE_AA)
         
+        # Tegner inn roi
         if self.roi_drawing:
             cv2.rectangle(frame, (self.roi[0], self.roi[1]), (self.roi[0]+self.roi[2], self.roi[1]+self.roi[3]), (0, 255, 0), 2)
-    
+
+        # Viser framen, håndterer avbryt med "q"
         cv2.imshow(self.win_name, frame)
         key = cv2.waitKey(10) & 0xFF
         if key == ord("q"):
@@ -213,6 +244,60 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_scale = 1
 FONT_thickness = 2
 
+def get_text_size(text):
+    return cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)[0]   #[0] for det gir (bredde, høyde)
+
+def get_largest_text_width(text1, text2):
+    text_width_list = [get_text_size(text1)[0], get_text_size(text2)[0]]    #[0] ettersom vi skal ha bredden
+    largest_text_width = max(text_width_list)
+    return largest_text_width
+
+def get_contrast_color(background_color):
+    """
+    Returnerer enten hvit eller svart, 
+    avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+
+    Parameters
+    ----------
+    background_color : tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til bakgrunnsfargen.
+
+    Returns
+    -------
+    tuple
+        En tuple med tre verdier som representerer RGB-verdien
+        til den beste teksten basert på bakgrunnsfargen.
+    """
+    # Konverter bakgrunnsfargen til gråskala
+    bg_gray = cv2.cvtColor(np.uint8([[background_color]]), cv2.COLOR_BGR2GRAY)[0][0]
+
+    # Beregn luminansen til hvitt og svart
+    white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
+    black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
+
+    # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
+    white_contrast = abs(int(white_luminance) - int(bg_gray))
+    black_contrast = abs(int(black_luminance) - int(bg_gray))
+
+    # Returner fargen med høyest kontrast
+    if white_contrast > black_contrast:
+        return (255, 255, 255)
+    else:
+        return (0, 0, 0)
+
+def calculate_center_text(frame_width : int, frame_height : int, text : str = "", text_width : int = 0, text_height : int = 0, text_offset_position : tuple = (0,0)):
+    """
+    text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
+        dette blir vanligvis øvre venstre hjørne av omrisset til knappen
+    """
+    if text_width == 0 and text_height == 0:
+        (text_width, text_height) = get_text_size(text)
+    # Beregn posisjonen for teksten
+    text_x = (frame_width - text_width) // 2 + text_offset_position[0]
+    text_y = (frame_height + text_height) // 2 + text_offset_position[1]
+    return text_x, text_y
+
 class button():
     def __init__(self, active_text, deactive_text, start_point, height, active_color, deactive_color):
         self.start_point = start_point
@@ -222,15 +307,12 @@ class button():
         self.deactive_text = deactive_text
         self.deactive_color = deactive_color
 
-        text_width_list = [cv2.getTextSize(active_text, FONT, FONT_scale, FONT_thickness)[0][0], 
-              cv2.getTextSize(deactive_text, FONT, FONT_scale, FONT_thickness)[0][0]]
-        
-        largest_text_width = max(text_width_list)
+        largest_text_width = get_largest_text_width(active_text, deactive_text)
+
         self.button_width = largest_text_width + 20
         self.button_height = height
-        self.end_point = (start_point[0]+self.button_width, start_point[1]+height)
+        self.end_point = (start_point[0] + self.button_width, start_point[1] + self.button_height)
         self.active = False
-        
 
     def create(self, frame):
         """Legger knappen til på `frame`, med knappeegenskapene definert i konstruktøren
@@ -253,6 +335,7 @@ class button():
         self.textX, self.textY = calculate_center_text(self.button_width, self.button_height, current_text, text_offset_position=self.start_point)
         self.frame = DrawRoundedRectangle(self.frame, self.start_point, self.end_point, radius=4, color=current_color, thickness=-1, line_type=cv2.LINE_AA)
         self.frame = cv2.putText(self.frame, current_text, (self.textX, self.textY), FONT, FONT_scale, current_text_color, FONT_thickness)
+    
     def is_clicked(self, mouse_pos):
         """Skjekker om `mouse_pos` er over arealet til knappen
 
@@ -291,42 +374,30 @@ class button():
         """Setter knappen til å være deaktivert - endrer utseende"""
         self.active = False
 
-def get_contrast_color(bg_color):
-    """
-    Returnerer enten hvit eller svart, 
-    avhengig av hvilken som gir best kontrast mot bakgrunnsfargen.
+def create_multiple(left_frame, right_frame):
+        """
+        Creates a new image consisting of the given frames.
 
-    Parameters
-    ----------
-    bg_color : tuple
-        En tuple med tre verdier som representerer RGB-verdien
-        til bakgrunnsfargen.
+        Parameters:
+            right_frame (numpy.ndarray): The frame to place on the right side of
+                the new image.
+            left_frame (numpy.ndarray): The frame to place on the left side of the
+                new image.
 
-    Returns
-    -------
-    tuple
-        En tuple med tre verdier som representerer RGB-verdien
-        til den beste teksten basert på bakgrunnsfargen.
-    """
-    # Konverter bakgrunnsfargen til gråskala
-    bg_gray = cv2.cvtColor(np.uint8([[bg_color]]), cv2.COLOR_BGR2GRAY)[0][0]
+        Returns:
+            numpy.ndarray: The new image consisting of the given frames.
+        """
+        left_frame = left_frame[..., :3]
+        left_frame = cv2.rotate(left_frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        l_height, l_width, l_channels = left_frame.shape
+        r_height, r_width, r_channels = right_frame.shape
+        result = np.zeros((max(l_height, r_height), l_width+r_width, l_channels), dtype=np.uint8)
+        left_frame = cv2.filter2D(left_frame, -1, kernel)
+        result[:l_height,:l_width] = left_frame
+        result[:r_height, l_width:l_width+r_width] = right_frame        
+        return result
 
-    # Beregn luminansen til hvitt og svart
-    white_luminance = cv2.cvtColor(np.uint8([[[255, 255, 255]]]), cv2.COLOR_BGR2GRAY)[0][0]
-    black_luminance = cv2.cvtColor(np.uint8([[[0, 0, 0]]]), cv2.COLOR_BGR2GRAY)[0][0]
-
-    # Beregn kontrasten mellom bakgrunnsfargen og hvitt/svart
-    white_contrast = abs(int(white_luminance) - int(bg_gray))
-    black_contrast = abs(int(black_luminance) - int(bg_gray))
-
-    # Returner fargen med høyest kontrast
-    if white_contrast > black_contrast:
-        return (255, 255, 255)
-    else:
-        return (0, 0, 0)
-        
-
-def error_window(width: int, height: int, text: str = "") -> np.ndarray:
+def error_window(width: int = standard_frame_size[0], height: int = standard_frame_size[1], text: str = "") -> np.ndarray:
     """
     Oppretter et bilde av en ikke-kontakt skjermeffekt.
 
@@ -359,34 +430,26 @@ def error_window(width: int, height: int, text: str = "") -> np.ndarray:
         image[:, sector_start:sector_end] = color
 
     if text != "":
-        (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
-        
-        text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
+        try:
+            (text_width, text_height) = get_text_size(text)
+            
+            text_x, text_y = calculate_center_text(width, height, text_width=text_width, text_height=text_height)
 
-        # Definer størrelsen på rektangelet bak teksten
-        rect_x = text_x - 20
-        rect_y = text_y-text_height - 20
-        rect_width = text_width + 40
-        rect_height = text_height + 40
+            # Definer størrelsen på rektangelet bak teksten
+            rect_x = text_x - 20
+            rect_y = text_y-text_height - 20
+            rect_width = text_width + 40
+            rect_height = text_height + 40
 
-        # Fyll rektangelet med svart farge
-        image = cv2.rectangle(image, (rect_x, rect_y), (rect_x + rect_width, rect_y + rect_height), (0, 0, 0), -1)
+            # Fyll rektangelet med svart farge
+            image = cv2.rectangle(image, (rect_x, rect_y), (rect_x + rect_width, rect_y + rect_height), (0, 0, 0), -1)
 
-        # Skriv ut teksten på bildet
-        image = cv2.putText(image, text, (text_x, text_y), FONT, FONT_scale, (255, 255, 255), FONT_thickness, cv2.LINE_AA)
-
+            # Skriv ut teksten på bildet
+            image = cv2.putText(image, text, (text_x, text_y), FONT, FONT_scale, (255, 255, 255), FONT_thickness, cv2.LINE_AA)
+        except TypeError:
+            # If any of the rectangle coordinates are invalid, skip drawing the rectangle
+            pass
     return image
-
-def calculate_center_text(frame_width : int, frame_height : int, text : str = "", text_width : int = 0, text_height : int = 0, text_offset_position : tuple = (0,0)):
-    """
-    text_offset_position : verdi for hvor øvre venstre hjørne av frame vi skal kalkulere midt av, er på skjermen
-    """
-    if text_width == 0 and text_height == 0:
-        (text_width, text_height), _ = cv2.getTextSize(text, FONT, FONT_scale, FONT_thickness)
-    # Beregn posisjonen for teksten
-    text_x = (frame_width - text_width) // 2 + text_offset_position[0]
-    text_y = (frame_height + text_height) // 2 + text_offset_position[1]
-    return text_x, text_y
 
 def DrawRoundedRectangle(frame, topLeft, bottomRight, radius=1, color=255, thickness=1, line_type=cv2.LINE_AA):
     min_half = int(min((bottomRight[0] - topLeft[0]), (bottomRight[1] - topLeft[1])) * 0.5)

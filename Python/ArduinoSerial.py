@@ -23,7 +23,9 @@ class Arduino():
     def send(self, data: str) -> None:
         """Tar seg av å encode til bytes!
         """
-        self.send_queue.put(data)
+        if data is None:
+            data = ""
+        self.send_queue.put(str(data))
 
     def read(self) -> str:
         data = self.serial.readline()

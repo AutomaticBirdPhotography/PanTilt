@@ -58,7 +58,7 @@ class Controller:
                 else: raise e
             
 
-    def get_joystick_position(self, knob_number: int = 0, value_factor: float = 1) -> str:
+    def get_joystick_position(self, knob_number: int = 0, value_factor: float = 1):
         """
         Returnerer posisjonen til en joystick-knott i formatet `x,y` som en
         streng. `knob_number` angir hvilken knott som skal avleses (default 0).
@@ -90,15 +90,21 @@ class Controller:
             self.connect_controller() 
             return None
 
-        for i in range(self.joystick.get_numbuttons()):
-            if (self.joystick.get_button(i) == 1) and i in BUTTON_NUMBER_NAMES:
-                return BUTTON_NUMBER_NAMES[i]
+        try:
+            for i in range(self.joystick.get_numbuttons()):
+                if (self.joystick.get_button(i) == 1) and i in BUTTON_NUMBER_NAMES:
+                    return BUTTON_NUMBER_NAMES[i]
 
-        hat = self.joystick.get_hat(0)[1]
-        if hat != 0 and hat in HAT_NUMBER_NAMES:
-            return HAT_NUMBER_NAMES[hat]
+            hat = self.joystick.get_hat(0)[1]
+            if hat != 0 and hat in HAT_NUMBER_NAMES:
+                return HAT_NUMBER_NAMES[hat]
             
-        return None
+            return None
+            
+        except AttributeError:
+            # Hvis kontrolleren ikke er tilgjengelig, skriver den ut en melding
+            print("Kontrolleren er ikke tilgjengelig")
+            return None
         
 
     
@@ -122,7 +128,8 @@ class Controller:
             if event.type == pygame.QUIT:
                 self.stop()
             elif event.type == pygame.JOYDEVICEREMOVED:
-                self.joystick.quit()
+                if self.joystick is not None:
+                    self.joystick.quit()
                 self.joystick = None
                 self.is_connected = False
 

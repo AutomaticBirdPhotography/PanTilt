@@ -22,11 +22,13 @@ try:
     while True:
             if dslr.isOpened(): #dersom kameraet ikke kunne åpnes vises svart bilde isteden
                 _,dslrFrame = dslr.read()
+                dslrFrame = G.ensure_valid_frame(dslrFrame)
             else:
                 dslrFrame = G.error_window(480, 640, "DSLR connection failed")
             
             try:
                 webFrame = web.capture_array()
+                webFrame = G.ensure_valid_frame(webFrame)
             except Exception as e:
                 print(f"Error capturing image from Picamera2: {str(e)}")
                 webFrame = G.error_window(320, 240, "Picamera connection failed")
@@ -53,7 +55,7 @@ try:
                     arduino.send(data)
                 if data == "s":
                     break
-            result = main.create_multiple(webFrame, dslrFrame)
+            result = G.create_multiple(webFrame, dslrFrame)
             stream.sendFrame(result)
 
             previous_data = data

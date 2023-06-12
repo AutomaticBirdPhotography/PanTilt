@@ -1,3 +1,10 @@
+#TODO:
+# Gjelder all kode:
+# skire at looper har en slutt, slik som at while True avsluttes 1min etter siste mottatte data etc.
+# hver funksjon skal (som navnet tilsier) kun gjøre en funksjon
+# det skal settes opp tester, slik at det blir lett å kvalifisere om endringer ikke ødelegger for
+#etablert kode
+
 import vidTransfer as v
 import GUIopenCv as G
 import joyinput as j
@@ -63,7 +70,6 @@ def buttonActions(x=None, y=None, button=None):
         if value_index >= 1:
             value_index -= 1
     
-
 previous_distance = None
 index = 0
 
@@ -93,9 +99,7 @@ def onMouse(event, mouse_x, mouse_y, flags, param):
             if distanceToPoint is not None:
                 send_point(distanceToPoint)
     
-
 joy = j.Controller(0)
-
 
 main = G.window("Frame", onMouse)
 
@@ -108,7 +112,6 @@ increase_button = G.button("+","+", (470,380), 40, (100,100,100), (255,255,255))
 decrease_button = G.button("-","-", (520,380), 40, (100,100,100), (255,255,255))
 exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
 #roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
-
 
 main.add_objects([exit_button])
 main.create_border()
