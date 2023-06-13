@@ -8,10 +8,16 @@
 import vidTransfer as v
 import GUIopenCv as G
 import joyinput as j
-import cv2
+import cv2, time
 import traceback #gir info om feilmeldinger
 
-client = v.VideoClient(clientAddress="192.168.10.145")
+log_file = "remote_error_log.txt" # Fil hvor feilmeldinger lagres
+# Empty the log file by opening it in write mode ("w") and truncating its contents
+with open(log_file, "w") as f:
+    f.truncate()
+
+MAX_LOST_CONNECTION_TIME = 60 # 1 min
+client = v.VideoClient(clientAddress="auto")
 connected_to_tripod = client.is_connected
 
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
@@ -20,6 +26,8 @@ last_button = last_data = None #Må lager en verdi for dette så den ikke aktive
 value_factors = [0.1, 0.5, 1]
 value_index = 1 #faktor for hvor mye verdien fra joy skal ganges med
 init_tracking = False
+last_connected = None
+
 
 def buttonActions(x=None, y=None, button=None):
     global run_program, send_joyData, value_index, init_tracking
@@ -55,12 +63,12 @@ def buttonActions(x=None, y=None, button=None):
             client.sendData("a")
         align_button.deactivate()
     
-    #elif roi_button.is_clicked((x,y)):
-        #roi_button.toggle()
-        #if roi_button.active:
-            #init_tracking = True
-        #else:
-            #init_tracking = False
+    elif roi_button.is_clicked((x,y)):
+        roi_button.toggle()
+        if roi_button.active:
+            init_tracking = True
+        else:
+            init_tracking = False
 
     elif increase_button.is_clicked((x,y)) or button == "UP":
         if value_index < len(value_factors) - 1:
@@ -86,16 +94,16 @@ def send_point(distanceToPoint):
     previous_distance = distanceToPoint
 
 def onMouse(event, mouse_x, mouse_y, flags, param):
-    #if init_tracking:
-        #roi = main.draw_roi(event, mouse_x, mouse_y)
-        #if roi is not None and len(roi) == 4:
-            #client.sendData(f"r{roi}")
+    if init_tracking:
+        roi = main.draw_roi(event, mouse_x, mouse_y)
+        if roi is not None and len(roi) == 4:
+            client.sendData(f"r{roi}")
     if event == cv2.EVENT_LBUTTONDOWN:
         main.mouse_x = mouse_x
         main.mouse_y = mouse_y
         buttonActions(x=mouse_x, y=mouse_y)
         if not init_tracking:
-            distanceToPoint = main.create_point(mouse_x, mouse_y)
+            distanceToPoint = main.create_moveTo_point(mouse_x, mouse_y)
             if distanceToPoint is not None:
                 send_point(distanceToPoint)
     
@@ -111,16 +119,23 @@ joy_button.activate()
 increase_button = G.button("+","+", (470,380), 40, (100,100,100), (255,255,255))
 decrease_button = G.button("-","-", (520,380), 40, (100,100,100), (255,255,255))
 exit_button = G.button("X", "X", (600, 380), 40, (255,255,255), (0,0,255))
-#roi_button = G.button("Stop track", "Track", (450, 380), 40, (0,255,0), (255,255,255))
+roi_button = G.button("Stop track", "Track", (450, 180), 40, (0,255,0), (255,255,255))
 
-main.add_objects([exit_button])
+main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button, roi_button])
+# main.add_objects([exit_button])
 main.create_border()
 
 try:
-    while run_program:
+    while True:
         connected_to_tripod = client.is_connected
         if connected_to_tripod:
             main.add_objects([enable_button, home_button, align_button, joy_button, increase_button, decrease_button, exit_button])
+            last_connected = time.time()
+        else:
+            if last_connected is not None:
+                if time.time() - last_connected > MAX_LOST_CONNECTION_TIME:
+                    run_program = False
+                    raise Exception("Program avsluttet av bruker")
 
         frame = client.grabFrame()
         main.show(frame, value_factors[value_index])   #tar seg av "q"
@@ -136,12 +151,27 @@ try:
                 client.sendData(data)
             last_data = data
 
-except:
+        if run_program == False:
+            break
+except Exception as e:
     traceback.print_exc()
+    error_message = "An error occurred: {}\n".format(e)
+    traceback_info = traceback.format_exc()
+    
+    with open(log_file, "a") as f:
+        f.write(error_message)
+        f.write(traceback_info)
 finally:
     try:
         main.destroy()
         client.stop()   #Tar seg av å sende "s"
-    except:
+    except Exception as e:
         traceback.print_exc()
+        error_message = "An error occurred: {}\n".format(e)
+        traceback_info = traceback.format_exc()
+        
+        with open(log_file, "a") as f:
+            f.write(error_message)
+            f.write(traceback_info)
+            
         raise Exception("Alvorlige programfeil oppstod")

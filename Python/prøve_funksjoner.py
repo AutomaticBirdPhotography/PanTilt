@@ -1,7 +1,7 @@
-import cv2
-import numpy as np
-
-cap = cv2.VideoCapture(0)
-ret, frame = cap.read()
-
-print(np.ndarray == type(frame))
+import ip_config
+ip_configurator = ip_config.IPConfigurator()
+def configure_ip():
+    ip_configurator.selectIP(invalid_ip=ip_configurator.clientAddress)
+    print(ip_configurator.clientAddress)
+    
+configure_ip()

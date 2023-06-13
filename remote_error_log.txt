@@ -1,0 +1,9 @@
+An error occurred: show ble stoppet av bruker
+Traceback (most recent call last):
+  File "c:\Users\Robert\source\repos\PanTilt\Python\remote_panTilt.py", line 141, in <module>
+    main.show(frame, value_factors[value_index])   #tar seg av "q"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Robert\source\repos\PanTilt\Python\GUIopenCv.py", line 250, in show
+    raise Exception("show ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Exception: show ble stoppet av bruker

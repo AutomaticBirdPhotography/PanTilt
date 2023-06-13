@@ -3,10 +3,10 @@
 
 import cv2
 import numpy as np
-kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+KERNEL = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
 from screeninfo import get_monitors
-standard_frame_size = (600,500)
-standard_screen_size = (640,480)
+STANDARD_FRAME_SIZE = (700,500)
+STANDARD_SCREEN_SIZE = (840,680)
 screen_size_offset = 200    #+- hvor mange piksler skjærmstørrelsen kan avvike fra standard før den går til standard
 
 def get_screen_size():
@@ -14,11 +14,11 @@ def get_screen_size():
     width = screen_info.width
     height = screen_info.height
 
-    if width > standard_screen_size[0] + screen_size_offset or width < standard_screen_size[0] - screen_size_offset:
-        width = standard_screen_size[0]
+    if width > STANDARD_SCREEN_SIZE[0] + screen_size_offset or width < STANDARD_SCREEN_SIZE[0] - screen_size_offset:
+        width = STANDARD_SCREEN_SIZE[0]
     
-    if height > standard_screen_size[1] + screen_size_offset or height < standard_screen_size[1] - screen_size_offset:
-        height = standard_screen_size[1]
+    if height > STANDARD_SCREEN_SIZE[1] + screen_size_offset or height < STANDARD_SCREEN_SIZE[1] - screen_size_offset:
+        height = STANDARD_SCREEN_SIZE[1]
     
     return (width, height)
 
@@ -54,6 +54,20 @@ def draw_border(frame, border_width):
             frame = cv2.copyMakeBorder(frame, 0, border_width, border_width, border_width, cv2.BORDER_CONSTANT, value=0)
     return frame
 
+def get_center_point_coordinates(frame = None, bbox = None):
+    """
+    bbox: (start_point, end_point, widht, height)
+    """
+    if frame is not None:
+        frame_width, frame_height = get_frame_size(frame)
+        x = int(frame_width/2)
+        y = int(frame_height/2)
+        return (x,y)
+    elif bbox is not None:
+        return [int((bbox[2])/2+bbox[0]), int((bbox[3])/2+bbox[1])]
+    else:
+        return (0,0)
+
 class window():
     """
     A class for creating OpenCV windows and handling mouse events.
@@ -69,12 +83,12 @@ class window():
         function_on_mouse : Funciton
             The function to call when a mouse event occurs in the window.
         """
-        self.vertical_angle = 2.75 #grader ved fullframe 500mm
-        self.aspect_ratio = 3/4 #endres i samsvar med PanTilt
+        self.VERTICAL_ANGLE = 2.75 #grader ved fullframe 500mm
+        self.ASPECT_RATIO = 3/4 #endres i samsvar med PanTilt
 
         self.win_name = win_name
-        self.point_x = None
-        self.point_y = None
+        self.moveTo_point_x = None
+        self.moveTo_point_y = None
         self.mouse_x = None
         self.mouse_y = None
 
@@ -91,9 +105,9 @@ class window():
         if win_name is not None:
             create_cv2_window(win_name, function_on_mouse)
 
-            screen_width, screen_height = get_screen_size()
+            SCREEN_WIDTH, SCREEN_HEIGHT = get_screen_size()
             
-            bakgrunn = error_window(screen_width, screen_height)
+            bakgrunn = error_window(SCREEN_WIDTH, SCREEN_HEIGHT)
             self.show(bakgrunn)
 
     def add_objects(self, objects: list):
@@ -105,9 +119,9 @@ class window():
         """
         self.objects = objects
 
-    def create_point(self, x:int, y:int):
+    def create_moveTo_point(self, x:int, y:int):
         """
-        Sets a point at the given (x, y) coordinates and returns the degrees offset from the center of the frame
+        Sets a point at the given (x, y) coordinates if it is within the dslr_frame and returns the degrees offset from the center of the frame
 
         Parameters
         ----------
@@ -121,24 +135,22 @@ class window():
         tuple or None
             The degrees offset from the center of the frame if the point is within the frame, otherwise None
         """
-        if (self.point_x > self.frame_width-self.dslr_width-self.border_width and self.point_x < self.frame_width-self.border_width and self.point_y > 0 and self.point_y < self.frame_height-self.border_width):
-            self.point_x = x  #setter self.point_x som det punktet skal være, dette håndteres av show()
-            self.point_y = y
+        if (self.moveTo_point_x is None or self.moveTo_point_y is None):
+            self.moveTo_point_x = None
+            self.moveTo_point_y = None
+            return None
+        if (self.moveTo_point_x > self.frame_width-self.dslr_width-self.border_width and self.moveTo_point_x < self.frame_width-self.border_width and self.moveTo_point_y > 0 and self.moveTo_point_y < self.frame_height-self.border_width):
+            self.moveTo_point_x = x  #setter self.moveTo_point_x som det punktet skal være, dette håndteres av show()
+            self.moveTo_point_y = y
             
-            degrees_per_pixel = self.vertical_angle/self.frame_height
-            horisontal_offset = self.point_x-self.frame_width/2 #pixler unna senter
-            vertiacal_offset = self.point_y-self.frame_height/2
+            degrees_per_pixel = self.VERTICAL_ANGLE/self.frame_height
+            horisontal_offset = self.moveTo_point_x-self.frame_width/2 #pixler unna senter
+            vertiacal_offset = self.moveTo_point_y-self.frame_height/2
             return (degrees_per_pixel*horisontal_offset, degrees_per_pixel*vertiacal_offset)
         else: 
-            self.point_x = None
-            self.point_y = None
+            self.moveTo_point_x = None
+            self.moveTo_point_y = None
             return None
-    
-    def create_center_point(self, frame):
-        frame_width, frame_height = get_frame_size(frame)
-        x = int(frame_width/2)
-        y = int(frame_height/2)
-        cv2.rectangle(frame, (x, y), (x, y), (0,0,255), 5)
 
     def draw_roi(self, event, x, y):
         """
@@ -175,18 +187,19 @@ class window():
         self.tracker = None
 
     def TRACK(self, frame):
-        frame_width, frame_height = get_frame_size(frame)
-        x = int(frame_width/2)
-        y = int(frame_height/2)
-        track_center = [x,y]
+        #TODO funksjonalitet for å definere hvor objektet som trackes
+        # skal plasseres i bildet
+        x,y = get_center_point_coordinates(frame)
         cv2.rectangle(frame, (x, y), (x, y), (0,0,255), 5)
+        
+        track_center = [x,y]
         if self.roi_selected and self.tracker is None:
             self.tracker = cv2.legacy.TrackerMOSSE_create()
             track_success = self.tracker.init(frame, tuple(self.roi))
         if self.tracker is not None:
             track_success, bbox = self.tracker.update(frame)
             if track_success:
-                track_center = [int((bbox[2])/2+bbox[0]), int((bbox[3])/2+bbox[1])]
+                track_center = get_center_point_coordinates(bbox=bbox)
                 cv2.rectangle(frame, track_center, track_center, (255, 0, 255), 5)
                 cv2.line(frame, track_center, (x,y), (255, 0, 0), 2, cv2.LINE_AA)
                 bbox = [int(i) for i in bbox]
@@ -209,15 +222,15 @@ class window():
             Bildet som skal vises
         """
         self.frame_width, self.frame_height = get_frame_size(frame)
-        self.dslr_width = (self.frame_height-self.border_width)/self.aspect_ratio
+        self.dslr_width = (self.frame_height-self.border_width)/self.ASPECT_RATIO
 
         draw_border(frame, self.border_width)        
         
         # Tegner punktet
-        if (self.point_x is not None and self.point_y is not None):
-            cv2.rectangle(frame, (self.point_x, self.point_y), (self.point_x, self.point_y), (0,0,255), 5)
-            self.point_x = None
-            self.point_y = None
+        if (self.moveTo_point_x is not None and self.moveTo_point_y is not None):
+            cv2.rectangle(frame, (self.moveTo_point_x, self.moveTo_point_y), (self.moveTo_point_x, self.moveTo_point_y), (0,0,255), 5)
+            self.moveTo_point_x = None
+            self.moveTo_point_y = None
 
         # Legger til objektene (knappene)
         for e in self.objects: e.create(frame)
@@ -233,7 +246,7 @@ class window():
         # Viser framen, håndterer avbryt med "q"
         cv2.imshow(self.win_name, frame)
         key = cv2.waitKey(10) & 0xFF
-        if key == ord("q"):
+        if key == ord("q") or key == 27 or cv2.getWindowProperty(self.win_name, cv2.WND_PROP_VISIBLE) == 0:
             raise Exception("show ble stoppet av bruker")  # Når denne erroren kommer, vil koden i finally-blokken kjøres
 
     def destroy(self):
@@ -358,7 +371,6 @@ class button():
               & (mouse_pos[0] > self.start_point[0]) 
               & (mouse_pos[1] < self.end_point[1]) 
               & (mouse_pos[1] > self.start_point[1])):
-            self.create(self.frame)
             return True
         else:
             return False
@@ -392,12 +404,12 @@ def create_multiple(left_frame, right_frame):
         l_height, l_width, l_channels = left_frame.shape
         r_height, r_width, r_channels = right_frame.shape
         result = np.zeros((max(l_height, r_height), l_width+r_width, l_channels), dtype=np.uint8)
-        left_frame = cv2.filter2D(left_frame, -1, kernel)
+        left_frame = cv2.filter2D(left_frame, -1, KERNEL)
         result[:l_height,:l_width] = left_frame
         result[:r_height, l_width:l_width+r_width] = right_frame        
         return result
 
-def error_window(width: int = standard_frame_size[0], height: int = standard_frame_size[1], text: str = "") -> np.ndarray:
+def error_window(width: int = STANDARD_FRAME_SIZE[0], height: int = STANDARD_FRAME_SIZE[1], text: str = "") -> np.ndarray:
     """
     Oppretter et bilde av en ikke-kontakt skjermeffekt.
 
@@ -446,7 +458,7 @@ def error_window(width: int = standard_frame_size[0], height: int = standard_fra
 
             # Skriv ut teksten på bildet
             image = cv2.putText(image, text, (text_x, text_y), FONT, FONT_scale, (255, 255, 255), FONT_thickness, cv2.LINE_AA)
-        except TypeError:
+        except:
             # If any of the rectangle coordinates are invalid, skip drawing the rectangle
             pass
     return image

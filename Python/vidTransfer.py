@@ -73,7 +73,7 @@ class VideoClient():
         
         
         self.stopped = False
-        self.frame = self.errorImg = G.error_window(600, 500, "Waiting for connection")
+        self.frame = self.errorImg = G.error_window(text="Waiting for connection")
         self.thread = threading.Thread(target=self._grabFrameLoop)
         self.thread.daemon = True
         self.thread.start()

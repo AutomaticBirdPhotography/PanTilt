@@ -5,6 +5,11 @@ import StatusLed as S
 from picamera2 import Picamera2
 import cv2, traceback, os
 
+log_file = "tripod_error_log.txt" # Fil hvor feilmeldinger lagres
+# Empty the log file by opening it in write mode ("w") and truncating its contents
+with open(log_file, "w") as f:
+    f.truncate()
+
 stream = v.VideoStream(clientAddress="192.168.10.145")
 arduino = A.Arduino("/dev/ttyUSB0")
 
@@ -59,9 +64,15 @@ try:
             stream.sendFrame(result)
 
             previous_data = data
-except:
+except Exception as e:
     status.error()
     traceback.print_exc()
+    error_message = "An error occurred: {}\n".format(e)
+    traceback_info = traceback.format_exc()
+    
+    with open(log_file, "a") as f:
+        f.write(error_message)
+        f.write(traceback_info)
 finally:
     print("Avslutter")
     arduino.close()

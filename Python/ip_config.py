@@ -5,6 +5,7 @@ class IPConfigurator:
     def __init__(self):
         # Standard IP-adresse
         self.clientAddress = None
+        self.standard_group = "4"
         self.standard_ip = "100"
         self.valid_var2_range = range(0, 10)
         self.valid_var3_range = range(0, 10)
@@ -12,9 +13,14 @@ class IPConfigurator:
         # Global variabel for å holde styr på om vinduet allerede er åpent
         self.window_open = False
         
+        # Initialize dropdown attributes
+        self.dropdown1 = None
+        self.dropdown2 = None
+        self.dropdown3 = None
+        
     # Funksjon som oppdaterer IP-adressen når brukeren velger en verdi fra rullegardinmenyen
     def updateIP(self):
-        self.clientAddress = f"192.168.10.{str(self.var1.get())}{str(self.var2.get())}{str(self.var3.get())}"
+        self.clientAddress = f"192.168.{str(self.var0.get())}.{str(self.var1.get())}{str(self.var2.get())}{str(self.var3.get())}"
         self.root.destroy()
         self.window_open = False
 
@@ -43,13 +49,15 @@ class IPConfigurator:
         self.update_dropdown_options()
     
     def update_dropdown_options(self):
-        self.dropdown2['menu'].delete(0, 'end')
-        for value in self.valid_var2_range:
-            self.dropdown2['menu'].add_command(label=value, command=lambda v=value: self.var2.set(v))
+        if self.dropdown2 is not None:
+            self.dropdown2['menu'].delete(0, 'end')
+            for value in self.valid_var2_range:
+                self.dropdown2['menu'].add_command(label=value, command=lambda v=value: self.var2.set(v))
         
-        self.dropdown3['menu'].delete(0, 'end')
-        for value in self.valid_var3_range:
-            self.dropdown3['menu'].add_command(label=value, command=lambda v=value: self.var3.set(v))
+        if self.dropdown3 is not None:
+            self.dropdown3['menu'].delete(0, 'end')
+            for value in self.valid_var3_range:
+                self.dropdown3['menu'].add_command(label=value, command=lambda v=value: self.var3.set(v))
 
         
     # Funksjon som åpner et vindu for å velge en IP-adresse
@@ -72,15 +80,22 @@ class IPConfigurator:
         self.frame = ttk.Frame(self.root)
         self.frame.pack(pady=15)
         
-        self.label = ttk.Label(self.frame, text="192.168.10.")
+        self.label = ttk.Label(self.frame, text="192.168.")
         self.label.pack(side=tk.LEFT)
         
+        self.var0 = tk.StringVar(self.root)
         self.var1 = tk.StringVar(self.root)
         self.var2 = tk.StringVar(self.root)
         self.var3 = tk.StringVar(self.root)
         
         self.var1.trace("w", self.get_valid_range)  # Lytter for endringer i var1
         self.var2.trace("w", self.get_valid_range)
+        
+        self.dropdown0 = ttk.OptionMenu(self.frame, self.var0, *["0", "4", "10"])
+        self.dropdown0.pack(side=tk.LEFT)
+        
+        self.dot_label = ttk.Label(self.frame, text=".")
+        self.dot_label.pack(side=tk.LEFT)
         
         self.dropdown1 = ttk.OptionMenu(self.frame, self.var1, *range(-1,3))
         self.dropdown1.pack(side=tk.LEFT)
@@ -90,6 +105,7 @@ class IPConfigurator:
         
         self.dropdown3 = ttk.OptionMenu(self.frame, self.var3, *self.valid_var3_range)
         self.dropdown3.pack(side=tk.LEFT)
+        self.var0.set(self.standard_group)
         self.var1.set(self.standard_ip[0])
         self.var2.set(self.standard_ip[1])
         self.var3.set(self.standard_ip[2])
