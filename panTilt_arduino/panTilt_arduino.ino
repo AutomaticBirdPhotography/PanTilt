@@ -1,5 +1,5 @@
 /*
-      TODO: gjør slik at vi har konstanten microsteps, og at stativet skal kjøre identisk hva enn denne er
+      TODO: gjør slik at vi har konstanten MICROSTEPS, og at stativet skal kjøre identisk hva enn denne er
       
       Notes:
               0,100
@@ -21,19 +21,19 @@ Stepper_control stepper;
 bool allowHoming = true;
 bool allowAlign = true;
 
-const int vertikalDirPin = 7;
-const int vertikalStepPin = 6;
+const int VERTICAL_DIR_PIN = 7;
+const int VERTICAL_STEP_PIN = 6;
 
-const int horisontalDirPin = 8;
-const int horisontalStepPin = 9;
+const int HORIZONTAL_DIR_PIN = 8;
+const int HORIZONTAL_STEP_PIN = 9;
 
-const int enablePin = 2;
-const int microsteps = 16;
+const int ENABLE_PIN = 2;
+const int MICROSTEPS = 16;
 
 const int panServoPin = 11;
 const int tiltServoPin = 10;
 
-const int potPin = A7;
+const int POT_PIN = A7;
 int hSpeed = 0;
 int vSpeed = 0;
 float panSpeed = 0;
@@ -41,13 +41,13 @@ float tiltSpeed = 0;
 int maxUp = stepper.getMaxUp();     //verdiene settes i stepper_control.cpp
 int maxDown = stepper.getMaxDown();
 
-String init_incoming = "000,000,000,000";
-String incoming = init_incoming;
+String INIT_INCOMING = "000,000,000,000";
+String incoming = INIT_INCOMING;
 bool enable = false;
 
 void setup() {
   setupServos(panServoPin, tiltServoPin);
-  stepper.setupSteppers(horisontalDirPin, horisontalStepPin, vertikalDirPin, vertikalStepPin, enablePin, microsteps, potPin);
+  stepper.setupSteppers(HORIZONTAL_DIR_PIN, HORIZONTAL_STEP_PIN, VERTICAL_DIR_PIN, VERTICAL_STEP_PIN, ENABLE_PIN, MICROSTEPS, POT_PIN);
 
   Serial.begin(115200);
   Serial.setTimeout(15);
@@ -77,15 +77,15 @@ void loop() {
       stepper.homeSteppers();
       homeServos();
       allowHoming = false;
-      incoming = init_incoming;
+      incoming = INIT_INCOMING;
       vSpeed = 0;
       hSpeed = 0;
     }
   } else if (incoming[0] == 'a' && enable) {
     if (allowAlign) {
-      //nema 17 : 200 steps pr rev. * (microsteps) *1,8(36/20(tannhjul))= 360 * microsteps  -> 1deg = (360*microsteps/360) => 1deg = microsteps
-      float horisontalAlignPos = stepper.getCurrentHsteps()+(getOldPosPan() - (90 + getPan_offset())) * microsteps;  //blir som move() isteden for moveTo() når det er med currentHsteps (15 fordi kjører litt for langt)
-      float vertikalAlignPos = (getOldPosTilt() - (90 + getTilt_offset())) * microsteps;
+      //nema 17 : 200 steps pr rev. * (MICROSTEPS) *1,8(36/20(tannhjul))= 360 * MICROSTEPS  -> 1deg = (360*MICROSTEPS/360) => 1deg = MICROSTEPS
+      float horisontalAlignPos = stepper.getCurrentHsteps()+(getOldPosPan() - (90 + getPan_offset())) * MICROSTEPS;  //blir som move() isteden for moveTo() når det er med currentHsteps (15 fordi kjører litt for langt)
+      float vertikalAlignPos = (getOldPosTilt() - (90 + getTilt_offset())) * MICROSTEPS;
       if (vertikalAlignPos > maxUp) {
         vertikalAlignPos = maxUp;
       } else if (vertikalAlignPos < maxDown) {
@@ -110,18 +110,18 @@ void loop() {
         }
       }
       allowAlign = false;
-      incoming = init_incoming;
+      incoming = INIT_INCOMING;
       hSpeed = 0;
       vSpeed = 0;
     }
   } else if (incoming[0] == 'e') {
     enable = true;
     stepper.enableSteppers();
-    incoming = init_incoming;
+    incoming = INIT_INCOMING;
   } else if (incoming[0] == 'd') {
     enable = false;
     stepper.disableSteppers();
-    incoming = init_incoming;
+    incoming = INIT_INCOMING;
   } else if (incoming[0] == 'p' && enable) {
     incoming.remove(0, 1);  //fjerner første bokstav, som er p
     float toPoint_verdier[2];
@@ -130,7 +130,7 @@ void loop() {
     float float_vAngle = toPoint_verdier[1];
 
     stepper.steppersDriveToPoint(float_hAngle, float_vAngle); //blokkerer fram til den når posisjonen
-    incoming = init_incoming;
+    incoming = INIT_INCOMING;
   } else {
     joyMoveServos(panSpeed, tiltSpeed);
     if (enable) {
