@@ -25,14 +25,17 @@ def get_screen_size():
 def ensure_valid_frame(frame):
     """ Returnerer `frame` bare hvis `frame` er et gyldig bilde og ikke avviker for mye fra standard
     bildestørrelse"""
-    if np.any(frame) and type(frame) == np.ndarray:             # Sjekker at det er rett type
-        try:
-            frame_width, frame_height = get_frame_size(frame)   # Prøver å ta størrelsen på bildet, hvis den feiler, blir det error_window
-            if frame_height < 50 or frame_height > 2000 or frame_width < 50 or frame_width > 2000:      # Dersom størrelsen på bildet er helt feil, blir det error_window
+    if type(frame) == np.ndarray:             # Sjekker at det er rett type
+        if np.any(frame):
+            try:
+                frame_width, frame_height = get_frame_size(frame)   # Prøver å ta størrelsen på bildet, hvis den feiler, blir det error_window
+                if frame_height < 50 or frame_height > 2000 or frame_width < 50 or frame_width > 2000:      # Dersom størrelsen på bildet er helt feil, blir det error_window
+                    frame = error_window()
+                else:
+                    frame = frame
+            except:
                 frame = error_window()
-            else:
-                frame = frame
-        except:
+        else:
             frame = error_window()
     else:
         frame = error_window()
@@ -64,7 +67,7 @@ def get_center_point_coordinates(frame = None, bbox = None):
         y = int(frame_height/2)
         return (x,y)
     elif bbox is not None:
-        return [int((bbox[2])/2+bbox[0]), int((bbox[3])/2+bbox[1])]
+        return (int((bbox[2])/2+bbox[0]), int((bbox[3])/2+bbox[1]))
     else:
         return (0,0)
 
@@ -83,7 +86,7 @@ class window():
         function_on_mouse : Funciton
             The function to call when a mouse event occurs in the window.
         """
-        self.VERTICAL_ANGLE = 2.75 #grader ved fullframe 500mm
+        self.VERTICAL_ANGLE = 2.75 #grader bredt synsfelt ved fullframe 500mm
         self.ASPECT_RATIO = 3/4 #endres i samsvar med PanTilt
 
         self.win_name = win_name
