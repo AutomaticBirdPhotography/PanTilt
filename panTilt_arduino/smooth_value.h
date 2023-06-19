@@ -12,16 +12,15 @@ class Smoothing {
     float positionUpdate(int targetValue, int stepperPosition);
     float calculateStopping(float in_currentVelocity);
     int getRemainingSteps();
-    int maxUp;
-    int maxDown;
-    float acceleration;
+    int MAX_UP;
+    int MAX_DOWN;
+    float ACCELERATION;
   private:
     float currentValue = 0;
     float currentVelocity = 0;
     unsigned long previousMillis = 0;
-    const float interval = 60;
-    const int microStepping = 16;
-    float increaseVelocity;
+    const float INTERVAL = 60;
+    float INCREASE_VELOCITY;
     float stoppingDistance;
     int remainingSteps;
 };

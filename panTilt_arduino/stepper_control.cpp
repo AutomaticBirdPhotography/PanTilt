@@ -7,23 +7,41 @@
 Stepper_control::Stepper_control() {
 }
 
-void Stepper_control::setupSteppers(int horisontalDirPin, int horisontalStepPin, int vertikalDirPin, int vertikalStepPin, int in_enablePin, int in_pot) {
-  vSpeedSmoothing.setup(50, maxUp, maxDown);
-  hSpeedSmoothing.setup(25, 5760, -5760);  //verdiene her ser hvor langt side til side den kan gå. 5760 er en hel runde
-  pot = in_pot;
+int getPotentiometerValue(int pin) {
+  unsigned long potValue = 0;
+  for (int i = 0; i < 500; i++){
+    potValue += analogRead(pin);
+  }
+  return potValue / 500;
+}
+
+void Stepper_control::setupSteppers(int horisontalDirPin, int horisontalStepPin, int vertikalDirPin, int vertikalStepPin, int in_enablePin, int in_microsteps, int in_potPin) {
+  potPin = in_potPin;
   enablePin = in_enablePin;
+  microsteps = in_microsteps;
+
+  maxUp = (maxUp/16)*microsteps;      //verdiene er satt til 16 microsteps, derfor deles på 16 først
+  maxDown = (maxDown/16)*microsteps;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
+  maxSpeed = (maxSpeed/16)*microsteps;
+  vAcceleration = (vAcceleration/16)*microsteps;
+  hAcceleration = (hAcceleration/16)*microsteps;
+
+  
+  vSpeedSmoothing.setup(vAcceleration, maxUp, maxDown);
+  hSpeedSmoothing.setup(hAcceleration, 360*microsteps, -360*microsteps);  //verdiene her ser hvor langt side til side den kan gå. 360 er en hel runde ettersom det en runde på nema 17 er 200, og vi har beltenedgiring på 1.8
+  
   vertikal = AccelStepper(motorInterfaceType, vertikalStepPin, vertikalDirPin);
   horisontal = AccelStepper(motorInterfaceType, horisontalStepPin, horisontalDirPin);
 
-  pinMode(pot, INPUT);
+  pinMode(potPin, INPUT);
 
   vertikal.setMaxSpeed(maxSpeed);
   vertikal.setCurrentPosition(0);
-  vertikal.setAcceleration(50);
+  vertikal.setAcceleration(500);  //verdiene her har ingen ting å si, de settes i vSpeedSmoothing
   vertikal.setEnablePin(enablePin);
   vertikal.setPinsInverted(false, false, true);  //enable når pinnen er LOW
   horisontal.setMaxSpeed(maxSpeed);
-  horisontal.setAcceleration(50);
+  horisontal.setAcceleration(500);
   horisontal.setCurrentPosition(0);
   horisontal.setEnablePin(enablePin);
   horisontal.setPinsInverted(false, false, true);
@@ -32,14 +50,14 @@ void Stepper_control::setupSteppers(int horisontalDirPin, int horisontalStepPin,
   vertikal.disableOutputs();  //motorene skal ikke være på i starten
 }
 void Stepper_control::homeSteppers() {
-  for (int i = 0; i < 100; i++) {
-    potVerdi += analogRead(pot);
-  }
-  int homing = map((potVerdi / 100), 838, 596, 500, -500);  //verdier kalibrert tidligere
-  potVerdi = 0;
+  float potValue = getPotentiometerValue(potPin);
+
+  int homing = map((potValue / 100), 838, 596, (500/16)*microsteps, (-500/16)*microsteps);  //kjør motoren 500 steg i hver retning (moveTo()), les av pot-verdien. I dette tilfelle ble den kjørt til 500 med 16 microsteps, derfor kjørte den jo egentlig ikke så langt
+
   int vInitPos = vertikal.currentPosition();
   bool steppersStillRunning = true;
 
+  unsigned long loopStartedTime = millis();
   while (steppersStillRunning) {
     hSpeedSmooth = hSpeedSmoothing.speedUpdate(0, horisontal.currentPosition());
     horisontal.setSpeed(hSpeedSmooth);
@@ -49,20 +67,27 @@ void Stepper_control::homeSteppers() {
     vertikal.setSpeed(vSpeedSmooth);
     vertikal.runSpeed();
     steppersStillRunning = steppersRunning();
+    if (millis() - loopStartedTime > TIMEOUT_DURATION) {
+      // Stop the motors
+      disableSteppers();
+      break; // exit the loop
+    }
   }
   vertikal.setCurrentPosition(0);
   vSpeedSmoothing.reset();
 }
 
-void Stepper_control::steppersDriveToPoint(float float_hSteps, float float_vSteps) {
-  float fvSteps = float_vSteps * -16;
-  int vSteps = round(fvSteps);
-  float fhSteps = float_hSteps * 16;
-  int hSteps = round(fhSteps);
+void Stepper_control::steppersDriveToPoint(float float_hAngle, float float_vAngle) {
+  //nema 17 : 200 steps pr rev. * (microsteps) *1,8(36/20(tannhjul))= 360 * microsteps  -> 1deg = (360*microsteps/360) => 1deg = microsteps
+  float float_vSteps = float_vAngle * -microsteps;
+  int vSteps = round(float_vSteps);
+  float float_hSteps = float_hAngle * microsteps;
+  int hSteps = round(float_hSteps);
   vSteps = vertikal.currentPosition() + vSteps;
   hSteps = horisontal.currentPosition() + hSteps;
   bool steppersStillRunning = true;
   
+  unsigned long loopStartedTime = millis();
   while (steppersStillRunning) {
     vSpeedSmooth = vSpeedSmoothing.positionUpdate(vSteps, vertikal.currentPosition());
     hSpeedSmooth = hSpeedSmoothing.positionUpdate(hSteps, horisontal.currentPosition());
@@ -71,6 +96,11 @@ void Stepper_control::steppersDriveToPoint(float float_hSteps, float float_vStep
     vertikal.runSpeed();
     horisontal.runSpeed();
     steppersStillRunning = steppersRunning();
+    if (millis() - loopStartedTime > TIMEOUT_DURATION) {
+      // Stop the motors
+      disableSteppers();
+      break; // exit the loop
+    }
   }
 }
 
@@ -106,11 +136,10 @@ void Stepper_control::disableSteppers() {
 }
 
 void Stepper_control::enableSteppers() {
-  for (int i = 0; i < 500; i++) {
-    potVerdi += analogRead(pot);
-  }
-  int absolutePosition = map((potVerdi / 500), 838, 596, -500, 500);  //verdier kalibrert tidligere
-  potVerdi = 0;
+  float potValue = getPotentiometerValue(potPin);
+
+  int absolutePosition = map((potValue / 500), 838, 596, (-500/16)*microsteps, (500/16)*microsteps);  //verdier kalibrert tidligere
+
   vertikal.setCurrentPosition(absolutePosition);
   vertikal.enableOutputs();
 }

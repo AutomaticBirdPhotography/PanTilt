@@ -11,18 +11,23 @@ class Stepper_control {
     Smoothing vSpeedSmoothing;
     float vSpeedSmooth;
     
-    unsigned long potVerdi = 0;
+    const int TIMEOUT_DURATION = 1000*60*2; // 2min, en while løkke brytes dersom den har kjørt i mer enn denne verdien
+
     AccelStepper vertikal;
     AccelStepper horisontal;
-    int pot;
+    int potPin;
     int enablePin;
-    const int maxUp = 650;
-    const int maxDown = -350;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
-    const int maxSpeed = 200;
+    int microsteps;
 
-    void setupSteppers(int horisontalDirPin, int horisontalStepPin, int vertikalDirPin, int vertikalStepPin, int in_enablePin, int in_pot);
+    int maxUp = 650;
+    int maxDown = -350;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
+    int maxSpeed = 200;   // steg/sekund
+    int vAcceleration = 25; // steg/sekund^2
+    int hAcceleration = 50;
+
+    void setupSteppers(int horisontalDirPin, int horisontalStepPin, int vertikalDirPin, int vertikalStepPin, int in_enablePin, int in_microsteps, int in_potPin);
     void homeSteppers();
-    void steppersDriveToPoint(float float_hSteps, float float_vSteps);
+    void steppersDriveToPoint(float float_hAngle, float float_vAngle);
     void steppersDriveSpeed(float horisontalSpeed, float vertikalSpeed);
     void steppersDriveToPosition(float horisontalAlignPos, float vertikalAlignPos);
     void disableSteppers();
