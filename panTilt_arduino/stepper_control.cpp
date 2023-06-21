@@ -15,16 +15,22 @@ int getPotentiometerValue(int pin) {
   return potValue / 500;
 }
 
+int getAbsolutePosition(int potPin){
+  float potValue = getPotentiometerValue(potPin);
+  int absolutePosition = map(potValue, 838, 596, -500, 500);  //verdier kalibrert ved "calibrate_homing_arduino.ino"
+  return absolutePosition;
+}
+
 void Stepper_control::setupSteppers(int horisontalDirPin, int horisontalStepPin, int vertikalDirPin, int vertikalStepPin, int in_enablePin, int in_microsteps, int in_potPin) {
   potPin = in_potPin;
   enablePin = in_enablePin;
   microsteps = in_microsteps;
 
-  maxUp = (maxUp/16)*microsteps;      //verdiene er satt til 16 microsteps, derfor deles på 16 først
-  maxDown = (maxDown/16)*microsteps;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
-  maxSpeed = (maxSpeed/16)*microsteps;
-  vAcceleration = (vAcceleration/16)*microsteps;
-  hAcceleration = (hAcceleration/16)*microsteps;
+  //maxUp = (maxUp/16)*microsteps;      //verdiene er satt til 16 microsteps, derfor deles på 16 først
+  //maxDown = (maxDown/16)*microsteps;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
+  //maxSpeed = (maxSpeed/16)*microsteps;
+  //vAcceleration = (vAcceleration/16)*microsteps;
+  //hAcceleration = (hAcceleration/16)*microsteps;
 
   
   vSpeedSmoothing.setup(vAcceleration, maxUp, maxDown);
@@ -50,9 +56,7 @@ void Stepper_control::setupSteppers(int horisontalDirPin, int horisontalStepPin,
   vertikal.disableOutputs();  //motorene skal ikke være på i starten
 }
 void Stepper_control::homeSteppers() {
-  float potValue = getPotentiometerValue(potPin);
-
-  int homing = map((potValue / 100), 838, 596, (500/16)*microsteps, (-500/16)*microsteps);  //kjør motoren 500 steg i hver retning (moveTo()), les av pot-verdien. I dette tilfelle ble den kjørt til 500 med 16 microsteps, derfor kjørte den jo egentlig ikke så langt
+  int currentAbsolutePosition = getAbsolutePosition(potPin);
 
   int vInitPos = vertikal.currentPosition();
   bool steppersStillRunning = true;
@@ -63,7 +67,7 @@ void Stepper_control::homeSteppers() {
     horisontal.setSpeed(hSpeedSmooth);
     horisontal.runSpeed();
 
-    vSpeedSmooth = vSpeedSmoothing.positionUpdate(vInitPos+homing, vertikal.currentPosition());
+    vSpeedSmooth = vSpeedSmoothing.positionUpdate(vInitPos+currentAbsolutePosition, vertikal.currentPosition());
     vertikal.setSpeed(vSpeedSmooth);
     vertikal.runSpeed();
     steppersStillRunning = steppersRunning();
@@ -106,7 +110,6 @@ void Stepper_control::steppersDriveToPoint(float float_hAngle, float float_vAngl
 
 void Stepper_control::steppersDriveSpeed(float horisontalSpeed, float vertikalSpeed) {
   vSpeedSmooth = vSpeedSmoothing.speedUpdate(vertikalSpeed, vertikal.currentPosition());
-
   vertikal.setSpeed(vSpeedSmooth);
   vertikal.runSpeed();
   //------------------------------
@@ -136,11 +139,9 @@ void Stepper_control::disableSteppers() {
 }
 
 void Stepper_control::enableSteppers() {
-  float potValue = getPotentiometerValue(potPin);
+  int currentAbsolutePosition = getAbsolutePosition(potPin);
 
-  int absolutePosition = map((potValue / 500), 838, 596, (-500/16)*microsteps, (500/16)*microsteps);  //verdier kalibrert tidligere
-
-  vertikal.setCurrentPosition(absolutePosition);
+  vertikal.setCurrentPosition(currentAbsolutePosition);
   vertikal.enableOutputs();
 }
 

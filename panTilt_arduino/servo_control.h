@@ -2,12 +2,12 @@
 #define SERVO_CONTROL_H
 
 void setupServos(int panServo_pin, int tiltServo_pin);
-void joyMoveServos(float in_panSpeed, float in_tiltSpeed);
-void positionMovePanServo(float posPan);
+void joyMoveServos(float panAngleSpeed, float tiltAngleSpeed);
+void movePanToPosition(float absolute_position);
 void homeServos();
-float getOldPosPan();
-float getOldPosTilt();
-float getPan_offset();
-float getTilt_offset();
+float getPosPan();
+float getPosTilt();
+float getPAN_OFFSET();
+float getTILT_OFFSET();
 
 #endif

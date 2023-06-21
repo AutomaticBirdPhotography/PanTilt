@@ -7,7 +7,7 @@ void Smoothing::setup(float in_ACCELERATION, int in_MAX_UP, int in_MAX_DOWN) {
   ACCELERATION = in_ACCELERATION;
   MAX_UP = in_MAX_UP;
   MAX_DOWN = in_MAX_DOWN;
-  INCREASE_VELOCITY = ACCELERATION * (INTERVAL / 1000);
+  INCREASE_VELOCITY = ACCELERATION * (INTERVAL / 1000.0);
   stoppingDistance = calculateStopping(currentVelocity);
 }
 
@@ -90,7 +90,7 @@ void Smoothing::reset() {
 
 float Smoothing::calculateStopping(float in_currentVelocity) {
   float Iterations = ceil(abs(in_currentVelocity / INCREASE_VELOCITY)); //interasjoner igjen som trengs for å få inreaseValue til 0
-  float Distance = ceil(abs((Iterations + 1) * (in_currentVelocity*INTERVAL/1000) / 2));
+  float Distance = ceil(abs((Iterations + 1) * (in_currentVelocity * (INTERVAL / 1000.0)) / 2.0));
   if (in_currentVelocity < 0) Distance = -Distance;
   return Distance;
 }

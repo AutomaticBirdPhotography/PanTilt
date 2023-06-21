@@ -1,5 +1,7 @@
 /*
       TODO: gjør slik at vi har konstanten MICROSTEPS, og at stativet skal kjøre identisk hva enn denne er
+      Gjør slik at hver stepper og hver servo har sin instans av en klasse og at man kjører panServo.home()
+      så har en loop so for hvert intervall oppdaterer med panServo.runIncrement() eller noe.
       
       Notes:
               0,100
@@ -84,8 +86,8 @@ void loop() {
   } else if (incoming[0] == 'a' && enable) {
     if (allowAlign) {
       //nema 17 : 200 steps pr rev. * (MICROSTEPS) *1,8(36/20(tannhjul))= 360 * MICROSTEPS  -> 1deg = (360*MICROSTEPS/360) => 1deg = MICROSTEPS
-      float horisontalAlignPos = stepper.getCurrentHsteps()+(getOldPosPan() - (90 + getPan_offset())) * MICROSTEPS;  //blir som move() isteden for moveTo() når det er med currentHsteps (15 fordi kjører litt for langt)
-      float vertikalAlignPos = (getOldPosTilt() - (90 + getTilt_offset())) * MICROSTEPS;
+      float horisontalAlignPos = stepper.getCurrentHsteps()+(getPosPan() - (90 + getPAN_OFFSET())) * MICROSTEPS;  //blir som move() isteden for moveTo() når det er med currentHsteps (15 fordi kjører litt for langt)
+      float vertikalAlignPos = (getPosTilt() - (90 + getTILT_OFFSET())) * MICROSTEPS;
       if (vertikalAlignPos > maxUp) {
         vertikalAlignPos = maxUp;
       } else if (vertikalAlignPos < maxDown) {
@@ -95,13 +97,13 @@ void loop() {
       int totalMove = round(horisontalAlignPos);
       float gjenMove = totalMove;
       bool steppersStillRunning = true;
-      float initOldPosPan = getOldPosPan();
+      float initOldPosPan = getPosPan();
       int initHsteps = stepper.getCurrentHsteps();
       unsigned long loopStartedTime = millis();
       while (steppersStillRunning) {
         gjenMove = totalMove+stepper.getCurrentHsteps();
-        float alignPanServo = map(gjenMove, 0, totalMove, 90 + getPan_offset(), 180-initOldPosPan);
-        positionMovePanServo(alignPanServo);
+        float alignPanServo = map(gjenMove, 0, totalMove, 90 + getPAN_OFFSET(), 180-initOldPosPan);
+        movePanToPosition(alignPanServo);
         stepper.steppersDriveToPosition(horisontalAlignPos, vertikalAlignPos);
         steppersStillRunning = stepper.steppersRunning();
         if (millis() - loopStartedTime >= TIMEOUT_DURATION){

@@ -19,8 +19,8 @@ class Stepper_control {
     int enablePin;
     int microsteps;
 
-    int maxUp = 650;
-    int maxDown = -350;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
+    int maxUp = 550;
+    int maxDown = -400;  //hvor langt motoren kan gå før det er fare for at kameraet treffer rammen
     int maxSpeed = 200;   // steg/sekund
     int vAcceleration = 25; // steg/sekund^2
     int hAcceleration = 50;

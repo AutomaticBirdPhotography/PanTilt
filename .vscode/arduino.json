@@ -1,5 +1,7 @@
 {
     "sketch": "panTilt_arduino\\panTilt_arduino.ino",
-    "configuration": "cpu=atmega328",
-    "board": "arduino:avr:nano"
+    "configuration": "cpu=atmega328old",
+    "board": "arduino:avr:nano",
+    "port": "COM4",
+    "programmer": "avrispmkii"
 }
