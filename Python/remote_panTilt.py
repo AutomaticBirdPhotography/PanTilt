@@ -23,7 +23,7 @@ connected_to_tripod = client.is_connected
 run_program = True #Variabel for om programmet skal kjøre, avbrytes med exit_button
 send_joyData = True #Variabel for om data fra joy skal sendes, kan ikke sende joydata samtidig med at annen data som "h" og "a" sendes, greit å kunne skru av joy også (?)
 last_button = last_data = None #Må lager en verdi for dette så den ikke aktiverer og deaktiverer knappen mange ganger i sekundet
-value_factors = [0.1, 0.5, 1]
+value_factors = [0.1, 0.5, 1] #faktor for hvor mye verdien fra joy skal ganges med
 value_index = 1 #faktor for hvor mye verdien fra joy skal ganges med
 init_tracking = False
 last_connected = None

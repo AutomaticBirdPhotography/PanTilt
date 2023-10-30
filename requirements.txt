@@ -1,0 +1,6 @@
+numpy==1.26.1
+pygame==2.5.2
+pyserial==3.5
+screeninfo==0.8.1
+vidgear[core]==0.3.2
+opencv-python==4.6.0.66
